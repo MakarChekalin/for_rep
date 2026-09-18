@@ -1,0 +1,63 @@
+using Atm.Client.Application;
+using Spectre.Console;
+using Spectre.Console.Cli;
+
+namespace Atm.Client.Console.Commands;
+
+public class BalanceCommand : AsyncCommand
+{
+    private readonly AtmClientService _service;
+
+    public BalanceCommand(AtmClientService service)
+    {
+        _service = service;
+    }
+
+    protected override async Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken)
+    {
+        var (success, balance) = await _service.GetBalanceAsync();
+
+        if (success)
+            AnsiConsole.MarkupLine($"[green]Balance: {balance}[/]");
+        else
+            AnsiConsole.MarkupLine("[red]Failed to get balance.[/]");
+
+        return 0;
+    }
+}
+
+public class HistoryCommand : AsyncCommand
+{
+    private readonly AtmClientService _service;
+
+    public HistoryCommand(AtmClientService service)
+    {
+        _service = service;
+    }
+
+    protected override async Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken)
+    {
+        var (success, history) = await _service.GetHistoryAsync();
+
+        if (!success || history == null)
+        {
+            AnsiConsole.MarkupLine("[red]Failed to get history.[/]");
+            return 0;
+        }
+
+        var table = new Table();
+        table.AddColumn("Type");
+        table.AddColumn("Amount");
+        table.AddColumn("Timestamp");
+
+    foreach (var op in history)
+    {
+        var typeName = op.Type == 0 ? "Withdraw" : "Deposit";
+        table.AddRow(typeName, op.Amount.ToString(), op.Timestamp.ToString());
+    }
+    
+        AnsiConsole.Write(table);
+
+        return 0;
+    }
+}

@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Atm.Application/Atm.Application.csproj" />
+  <Project Path="Atm.Domain/Atm.Domain.csproj" />
+  <Project Path="Atm.Infrastructure/Atm.Infrastructure.csproj" />
+  <Project Path="Atm.Tests/Atm.Tests.csproj" />
+  <Project Path="Atm.WebApi/Atm.WebApi.csproj" />
+</Solution>
