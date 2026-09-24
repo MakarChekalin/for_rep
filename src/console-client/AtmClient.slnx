@@ -1,6 +1,0 @@
-<Solution>
-  <Project Path="Atm.Client.Application/Atm.Client.Application.csproj" />
-  <Project Path="Atm.Client.Console/Atm.Client.Console.csproj" />
-  <Project Path="Atm.Client.Domain/Atm.Client.Domain.csproj" />
-  <Project Path="Atm.Client.Infrastructure/Atm.Client.Infrastructure.csproj" />
-</Solution>
