@@ -2,5 +2,5 @@
 
 public class SessionState
 {
-    public Guid? SessionKey { get; set; } //сохранение идентификатора сессии
+    public Guid? SessionKey { get; set; } // сохранение идентификатора сессии
 }
