@@ -5,9 +5,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Refit" Version="15.2.0" />
-    <PackageReference Include="Refit.HttpClientFactory" Version="15.2.0" />
-    <PackageReference Include="Refit.Reflection" Version="15.2.0" />
+    <PackageReference Include="Refit" />
+    <PackageReference Include="Refit.HttpClientFactory" />
+    <PackageReference Include="Refit.Reflection" />
   </ItemGroup>
 
   <PropertyGroup>

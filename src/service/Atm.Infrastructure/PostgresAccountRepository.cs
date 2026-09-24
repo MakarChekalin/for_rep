@@ -1,5 +1,4 @@
 using Atm.Domain;
-using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace Atm.Infrastructure;
@@ -8,17 +7,17 @@ public class PostgresAccountRepository : IAccountRepository
 {
     private readonly string _connectionString;
 
-    public PostgresAccountRepository(IOptions<DatabaseOptions> options)
-    {
-        _connectionString = options.Value.ConnectionString; // тут у нас DI оттдает настройки, которые у нас лежат в DataBaseOption
-    }
+    public PostgresAccountRepository(string connectionString)
+{
+        _connectionString = connectionString;
+}
 
     public async Task<Account?> GetByNumberAsync(string number)
     {
         await using var connection = new NpgsqlConnection(_connectionString); // тут создается соединение (connection берется из настроек)
         await connection.OpenAsync(); // открытие соединения
 
-        await using var command = new NpgsqlCommand( // тут уже сам запрос по нужному соединению
+        await using var command = new NpgsqlCommand(
             "SELECT number, pin_code, balance FROM accounts WHERE number = @number",
             connection);
         command.Parameters.AddWithValue("number", number); // делаем так для защиты
@@ -38,8 +37,10 @@ public class PostgresAccountRepository : IAccountRepository
     {
         await using var connection = new NpgsqlConnection(_connectionString);
         await connection.OpenAsync();
+
         // тут ON CONFLICT нужен чтобы при конфликте с PR баланс обновлялся
-        await using var command = new NpgsqlCommand(@" 
+        await using var command = new NpgsqlCommand(
+            @"
             INSERT INTO accounts (number, pin_code, balance)
             VALUES (@number, @pinCode, @balance)
             ON CONFLICT (number) DO UPDATE SET balance = @balance",

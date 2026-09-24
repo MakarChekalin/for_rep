@@ -1,5 +1,4 @@
 using Atm.Domain;
-using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace Atm.Infrastructure;
@@ -8,10 +7,10 @@ public class PostgresSessionRepository : ISessionRepository
 {
     private readonly string _connectionString;
 
-    public PostgresSessionRepository(IOptions<DatabaseOptions> options)
-    {
-        _connectionString = options.Value.ConnectionString;
-    }
+    public PostgresSessionRepository(string connectionString)
+{
+        _connectionString = connectionString;
+}
 
     public async Task<Session?> GetByKeyAsync(Guid key)
     {
@@ -39,7 +38,8 @@ public class PostgresSessionRepository : ISessionRepository
         await using var connection = new NpgsqlConnection(_connectionString);
         await connection.OpenAsync();
 
-        await using var command = new NpgsqlCommand(@"
+        await using var command = new NpgsqlCommand(
+            @"
             INSERT INTO sessions (key, type, account_number)
             VALUES (@key, @type, @accountNumber)",
             connection);

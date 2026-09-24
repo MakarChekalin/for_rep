@@ -1,5 +1,4 @@
 using Atm.Domain;
-using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace Atm.Infrastructure;
@@ -8,9 +7,9 @@ public class PostgresOperationRepository : IOperationRepository
 {
     private readonly string _connectionString;
 
-    public PostgresOperationRepository(IOptions<DatabaseOptions> options)
+    public PostgresOperationRepository(string connectionString)
     {
-        _connectionString = options.Value.ConnectionString;
+        _connectionString = connectionString;
     }
 
     public async Task SaveAsync(Operation operation)
@@ -18,7 +17,8 @@ public class PostgresOperationRepository : IOperationRepository
         await using var connection = new NpgsqlConnection(_connectionString);
         await connection.OpenAsync();
 
-        await using var command = new NpgsqlCommand(@"
+        await using var command = new NpgsqlCommand(
+            @"
             INSERT INTO operations (account_number, type, amount, timestamp)
             VALUES (@accountNumber, @type, @amount, @timestamp)",
             connection);

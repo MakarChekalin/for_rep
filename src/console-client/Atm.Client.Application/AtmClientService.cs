@@ -5,9 +5,9 @@ namespace Atm.Client.Application;
 public class AtmClientService
 {
     private readonly IAtmGateway _gateway;
-    private readonly SessionState _sessionState;
+    private readonly ClientSessionState _sessionState;
 
-    public AtmClientService(IAtmGateway gateway, SessionState sessionState)
+    public AtmClientService(IAtmGateway gateway, ClientSessionState sessionState)
     {
         _gateway = gateway;
         _sessionState = sessionState;

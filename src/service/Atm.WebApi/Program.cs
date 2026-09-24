@@ -3,7 +3,7 @@ using Atm.Domain;
 using Atm.Infrastructure;
 using Atm.Infrastructure.Migrations;
 using FluentMigrator.Runner;
-using Microsoft.Extensions.Options;
+using Npgsql;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,14 +11,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-builder.Services.Configure<DatabaseOptions>(options => // теперь в конструкторах будет понятно откуда брать IOptions<DatabaseOptions>
-{
-    options.ConnectionString = builder.Configuration.GetConnectionString("Postgres");
-});
+string connectionString = builder.Configuration.GetConnectionString("Postgres")
+?? throw new InvalidOperationException("Connection string not found!!!");
 
-builder.Services.AddSingleton<IAccountRepository, PostgresAccountRepository>();
-builder.Services.AddSingleton<ISessionRepository, PostgresSessionRepository>();
-builder.Services.AddSingleton<IOperationRepository, PostgresOperationRepository>();
+builder.Services.AddSingleton(NpgsqlDataSource.Create(connectionString));
+builder.Services.AddSingleton<IAccountRepository>(_ => new PostgresAccountRepository(connectionString));
+builder.Services.AddSingleton<ISessionRepository>(_ => new PostgresSessionRepository(connectionString));
+builder.Services.AddSingleton<IOperationRepository>(_ => new PostgresOperationRepository(connectionString));
 builder.Services.AddSingleton<AccountService>();
 builder.Services.AddSingleton<SessionService>(sp =>
     new SessionService(
@@ -30,11 +29,11 @@ builder.Services.AddFluentMigratorCore() // настройка миграции(
     .ConfigureRunner(rb => rb
         .AddPostgres() // что за бд
         .WithGlobalConnectionString(builder.Configuration.GetConnectionString("Postgres")) // куда подкл.
-        .ScanIn(typeof(Migration001_InitialSchema).Assembly).For.Migrations()); // тут ищем все классы миграции 
+        .ScanIn(typeof(Migration001InitialSchema).Assembly).For.Migrations()); // тут ищем все классы миграции
 
 var app = builder.Build();
 
-using (var scope = app.Services.CreateScope()) // применение миграций при страрте 
+using (var scope = app.Services.CreateScope()) // применение миграций при страрте
 {
     var runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
     runner.MigrateUp();

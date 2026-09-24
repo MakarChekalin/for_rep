@@ -5,10 +5,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FluentMigrator" Version="8.0.1" />
-    <PackageReference Include="FluentMigrator.Runner" Version="8.0.1" />
-    <PackageReference Include="FluentMigrator.Runner.Postgres" Version="8.0.1" />
-    <PackageReference Include="Npgsql" Version="10.0.3" />
+    <PackageReference Include="FluentMigrator" />
+    <PackageReference Include="FluentMigrator.Runner" />
+    <PackageReference Include="FluentMigrator.Runner.Postgres" />
+    <PackageReference Include="Npgsql" />
   </ItemGroup>
 
   <PropertyGroup>

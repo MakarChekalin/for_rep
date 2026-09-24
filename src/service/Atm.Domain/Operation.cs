@@ -3,14 +3,17 @@ namespace Atm.Domain;
 public enum OperationType // только списание или депозит
 {
     Withdraw,
-    Deposit
+    Deposit,
 }
 
 public class Operation
 {
     public string AccountNumber { get; }
+
     public OperationType Type { get; }
+
     public decimal Amount { get; }
+
     public DateTime Timestamp { get; }
 
     public Operation(string accountNumber, OperationType type, decimal amount, DateTime? timestamp = null)

@@ -26,8 +26,3 @@ public interface IAtmApi
     [Get("/api/accounts/transactions")]
     Task<IApiResponse<List<OperationResponse>>> GetTransactionsAsync([Query] Guid sessionKey);
 }
-
-public record LoginUserBody(string AccountNumber, string PinCode);
-public record LoginAdminBody(string Password);
-public record CreateAccountBody(Guid SessionKey, string Number, string PinCode);
-public record AmountBody(Guid SessionKey, decimal Amount);

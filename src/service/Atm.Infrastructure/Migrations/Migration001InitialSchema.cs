@@ -3,7 +3,7 @@ using FluentMigrator;
 namespace Atm.Infrastructure.Migrations;
 
 [Migration(1)] // показывает, что эту миграцию надо делать первой
-public class Migration001_InitialSchema : Migration
+public class Migration001InitialSchema : Migration
 {
     public override void Up() // создание таблиц
     {
@@ -14,7 +14,8 @@ public class Migration001_InitialSchema : Migration
                 balance DECIMAL NOT NULL
             );
         ");
-//UUID то же самое что и Guid
+
+        // UUID то же самое что и Guid
         Execute.Sql(@"
             CREATE TABLE sessions (
                 key UUID PRIMARY KEY,
@@ -22,7 +23,8 @@ public class Migration001_InitialSchema : Migration
                 account_number VARCHAR(50) NULL
             );
         ");
-// SERIAL сам увеличивает число
+
+        // SERIAL сам увеличивает число
         Execute.Sql(@"
             CREATE TABLE operations (
                 id SERIAL PRIMARY KEY,
@@ -34,7 +36,7 @@ public class Migration001_InitialSchema : Migration
         ");
     }
 
-    public override void Down() // откат таблиц 
+    public override void Down() // откат таблиц
     {
         Execute.Sql("DROP TABLE operations;");
         Execute.Sql("DROP TABLE sessions;");

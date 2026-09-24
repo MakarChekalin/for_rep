@@ -3,7 +3,9 @@ namespace Atm.Domain;
 public class Account
 {
     public string Number { get; } // get чтобы читать но не изменять(для защиты)
+
     public string PinCode { get; }
+
     public decimal Balance { get; private set; } // тут уже можно изменять внутри класса
 
     public Account(string number, string pinCode, decimal balance)
@@ -13,8 +15,7 @@ public class Account
         Balance = balance;
     }
 
-
-    public bool Withdraw(decimal amount) // метод списания 
+    public bool Withdraw(decimal amount) // метод списания
     {
         if (amount <= 0)
             return false;

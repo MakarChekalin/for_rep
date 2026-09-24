@@ -1,7 +1,6 @@
 using Atm.Application;
 using Atm.Domain;
 using Moq;
-using Xunit;
 
 namespace Atm.Tests;
 

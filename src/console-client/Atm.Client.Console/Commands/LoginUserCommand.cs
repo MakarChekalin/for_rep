@@ -1,18 +1,8 @@
 using Atm.Client.Application;
 using Spectre.Console;
 using Spectre.Console.Cli;
-using System.ComponentModel;
 
 namespace Atm.Client.Console.Commands;
-
-public class LoginUserSettings : CommandSettings // что нужно ввести
-{
-    [CommandArgument(0, "<accountNumber>")]
-    public string AccountNumber { get; set; } = string.Empty;
-
-    [CommandArgument(1, "<pinCode>")]
-    public string PinCode { get; set; } = string.Empty;
-}
 
 public class LoginUserCommand : AsyncCommand<LoginUserSettings> // что сделать с этими введёнными данными
 {
@@ -23,7 +13,7 @@ public class LoginUserCommand : AsyncCommand<LoginUserSettings> // что сде
         _service = service;
     }
 
-    protected override async Task<int> ExecuteAsync(CommandContext context, LoginUserSettings settings, CancellationToken cancellationToken) // CancellationToken для отмены(ctrl + c) 
+    protected override async Task<int> ExecuteAsync(CommandContext context, LoginUserSettings settings, CancellationToken cancellationToken) // CancellationToken для отмены(ctrl + c)
     {
         var success = await _service.LoginUserAsync(settings.AccountNumber, settings.PinCode);
 

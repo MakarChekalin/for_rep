@@ -64,8 +64,8 @@ public class RefitAtmGateway : IAtmGateway
         var response = await _api.GetTransactionsAsync(sessionKey);
 
         if (!response.IsSuccessStatusCode || response.Content == null)
-         return (false, null);
+            return (false, null);
 
-      return (true, response.Content);
+        return (true, response.Content);
     }
 }
