@@ -19,10 +19,10 @@ builder.Services.AddSingleton<IAccountRepository>(_ => new PostgresAccountReposi
 builder.Services.AddSingleton<ISessionRepository>(_ => new PostgresSessionRepository(connectionString));
 builder.Services.AddSingleton<IOperationRepository>(_ => new PostgresOperationRepository(connectionString));
 builder.Services.AddSingleton<AccountService>();
-builder.Services.AddSingleton<SessionService>(sp =>
+builder.Services.AddSingleton(_ =>
     new SessionService(
-        sp.GetRequiredService<ISessionRepository>(),
-        sp.GetRequiredService<IAccountRepository>(),
+        _.GetRequiredService<ISessionRepository>(),
+        _.GetRequiredService<IAccountRepository>(),
         builder.Configuration["AdminPassword"] ?? "admin123"));
 
 builder.Services.AddFluentMigratorCore() // настройка миграции(куда подключаться)

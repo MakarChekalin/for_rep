@@ -6,21 +6,21 @@ namespace Atm.Client.Console.Commands;
 
 public class CreateAccountCommand : AsyncCommand<CreateAccountSettings>
 {
-    private readonly AtmClientService _service;
+    private readonly IAtmClientService _service;
 
-    public CreateAccountCommand(AtmClientService service)
+    public CreateAccountCommand(IAtmClientService service)
     {
         _service = service;
     }
 
     protected override async Task<int> ExecuteAsync(CommandContext context, CreateAccountSettings settings, CancellationToken cancellationToken)
     {
-        var (success, error) = await _service.CreateAccountAsync(settings.Number, settings.PinCode);
+        var result = await _service.CreateAccountAsync(settings.Number, settings.PinCode);
 
-        if (success)
+        if (result == Domain.CreateAccountResult.Success)
             AnsiConsole.MarkupLine("[green]Account created.[/]");
         else
-            AnsiConsole.MarkupLine($"[red]Failed: {error}[/]");
+            AnsiConsole.MarkupLine($"[red]Create account failed.[/]");
 
         return 0;
     }

@@ -7,9 +7,9 @@ namespace Atm.Client.Console.Commands;
 // не сделал отдельный класс settings(уже есть в WithdrawCommand)
 public class DepositCommand : AsyncCommand<AmountSettings>
 {
-    private readonly AtmClientService _service;
+    private readonly IAtmClientService _service;
 
-    public DepositCommand(AtmClientService service)
+    public DepositCommand(IAtmClientService service)
     {
         _service = service;
     }

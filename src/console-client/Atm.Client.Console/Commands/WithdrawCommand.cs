@@ -6,9 +6,9 @@ namespace Atm.Client.Console.Commands;
 
 public class WithdrawCommand : AsyncCommand<AmountSettings>
 {
-    private readonly AtmClientService _service;
+    private readonly IAtmClientService _service;
 
-    public WithdrawCommand(AtmClientService service)
+    public WithdrawCommand(IAtmClientService service)
     {
         _service = service;
     }

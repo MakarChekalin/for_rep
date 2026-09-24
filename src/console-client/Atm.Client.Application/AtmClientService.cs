@@ -2,7 +2,7 @@ using Atm.Client.Domain;
 
 namespace Atm.Client.Application;
 
-public class AtmClientService
+public class AtmClientService : IAtmClientService
 {
     private readonly IAtmGateway _gateway;
     private readonly ClientSessionState _sessionState;
@@ -35,13 +35,13 @@ public class AtmClientService
         return true;
     }
 
-    public async Task<(bool Success, string? Error)> CreateAccountAsync(string number, string pinCode)
+    public async Task<CreateAccountResult> CreateAccountAsync(string number, string pinCode)
     {
         if (_sessionState.SessionKey == null)
-            return (false, "Not logged in");
+            return CreateAccountResult.NotLoggedIn;
 
         var success = await _gateway.CreateAccountAsync(_sessionState.SessionKey.Value, number, pinCode);
-        return (success, success ? null : "Failed to create account");
+        return success ? CreateAccountResult.Success : CreateAccountResult.Error;
     }
 
     public async Task<(bool Success, string? Error)> WithdrawAsync(decimal amount)

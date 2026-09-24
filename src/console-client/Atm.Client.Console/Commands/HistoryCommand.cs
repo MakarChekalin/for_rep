@@ -6,9 +6,9 @@ namespace Atm.Client.Console.Commands;
 
 public class HistoryCommand : AsyncCommand
 {
-    private readonly AtmClientService _service;
+    private readonly IAtmClientService _service;
 
-    public HistoryCommand(AtmClientService service)
+    public HistoryCommand(IAtmClientService service)
     {
         _service = service;
     }

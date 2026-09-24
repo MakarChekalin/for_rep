@@ -6,9 +6,9 @@ namespace Atm.Client.Console.Commands;
 
 public class LoginUserCommand : AsyncCommand<LoginUserSettings> // что сделать с этими введёнными данными
 {
-    private readonly AtmClientService _service;
+    private readonly IAtmClientService _service;
 
-    public LoginUserCommand(AtmClientService service)
+    public LoginUserCommand(IAtmClientService service)
     {
         _service = service;
     }

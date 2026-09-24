@@ -6,9 +6,9 @@ namespace Atm.Client.Console.Commands;
 
 public class LoginAdminCommand : AsyncCommand<LoginAdminSettings>
 {
-    private readonly AtmClientService _service;
+    private readonly IAtmClientService _service;
 
-    public LoginAdminCommand(AtmClientService service)
+    public LoginAdminCommand(IAtmClientService service)
     {
         _service = service;
     }

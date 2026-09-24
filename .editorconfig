@@ -31,10 +31,10 @@ dotnet_diagnostic.ide0005.severity = warning
 
 # IDE0007 and IDE0008
 dotnet_diagnostic.ide0007.severity = warning
-dotnet_diagnostic.ide0008.severity = warning
-csharp_style_var_when_type_is_apparent = true:warning
-csharp_style_var_for_built_in_types = false:silent
-csharp_style_var_elsewhere = false:silent
+dotnet_diagnostic.ide0008.severity = none
+csharp_style_var_when_type_is_apparent = true:suggestion
+csharp_style_var_for_built_in_types = false:suggestion
+csharp_style_var_elsewhere = false:suggestion
 
 # IDE0010
 dotnet_diagnostic.ide0010.severity = suggestion
