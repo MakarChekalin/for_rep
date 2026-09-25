@@ -1,4 +1,5 @@
 using Atm.Domain;
+using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace Atm.Infrastructure;
@@ -7,10 +8,10 @@ public class PostgresSessionRepository : ISessionRepository
 {
     private readonly string _connectionString;
 
-    public PostgresSessionRepository(string connectionString)
-{
-        _connectionString = connectionString;
-}
+    public PostgresSessionRepository(IOptions<DatabaseOptions> options)
+    {
+        _connectionString = options.Value.ConnectionString;
+    }
 
     public async Task<Session?> GetByKeyAsync(Guid key)
     {

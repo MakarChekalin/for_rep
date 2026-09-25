@@ -1,4 +1,5 @@
 using Atm.Domain;
+using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace Atm.Infrastructure;
@@ -7,9 +8,9 @@ public class PostgresOperationRepository : IOperationRepository
 {
     private readonly string _connectionString;
 
-    public PostgresOperationRepository(string connectionString)
+    public PostgresOperationRepository(IOptions<DatabaseOptions> options)
     {
-        _connectionString = connectionString;
+        _connectionString = options.Value.ConnectionString;
     }
 
     public async Task SaveAsync(Operation operation)
@@ -31,20 +32,9 @@ public class PostgresOperationRepository : IOperationRepository
         await command.ExecuteNonQueryAsync();
     }
 
-    public async Task<IReadOnlyList<Operation>> GetByAccountNumberAsync(string accountNumber)
+    // IAsyncEnumerable: операции отдаются по одной по мере чтения из БД, без накопления всего списка в памяти
+    public async IAsyncEnumerable<Operation> GetByAccountNumberAsync(string accountNumber)
     {
-        var results = new List<Operation>();
-
-        await foreach (var operation in StreamByAccountNumberAsync(accountNumber))
-        {
-            results.Add(operation);
-        }
-
-        return results;
-    }
-
-    private async IAsyncEnumerable<Operation> StreamByAccountNumberAsync(string accountNumber) // тут используем async list(по условию)
-    { // + async тут нужен так как тут ищутся все операции по аккаунту(и что бы их все найти в дб нужно много времени)
         await using var connection = new NpgsqlConnection(_connectionString);
         await connection.OpenAsync();
 

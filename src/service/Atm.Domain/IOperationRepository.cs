@@ -4,5 +4,5 @@ public interface IOperationRepository
 {
     Task SaveAsync(Operation operation);
 
-    Task<IReadOnlyList<Operation>> GetByAccountNumberAsync(string accountNumber);
+    IAsyncEnumerable<Operation> GetByAccountNumberAsync(string accountNumber);
 }

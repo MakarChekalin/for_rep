@@ -2,8 +2,9 @@ using Atm.Application;
 using Atm.Domain;
 using Atm.Infrastructure;
 using Atm.Infrastructure.Migrations;
+using Atm.WebApi;
 using FluentMigrator.Runner;
-using Npgsql;
+using Microsoft.Extensions.Options;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,24 +12,34 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-string connectionString = builder.Configuration.GetConnectionString("Postgres")
-?? throw new InvalidOperationException("Connection string not found!!!");
+// конфигурации читаются из IConfiguration и отдаются через IOptions с валидацией при старте
+builder.Services.AddOptions<DatabaseOptions>()
+    .Configure<IConfiguration>((options, configuration) =>
+        options.ConnectionString = configuration.GetConnectionString("Postgres") ?? string.Empty)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
-builder.Services.AddSingleton(NpgsqlDataSource.Create(connectionString));
-builder.Services.AddSingleton<IAccountRepository>(_ => new PostgresAccountRepository(connectionString));
-builder.Services.AddSingleton<ISessionRepository>(_ => new PostgresSessionRepository(connectionString));
-builder.Services.AddSingleton<IOperationRepository>(_ => new PostgresOperationRepository(connectionString));
+builder.Services.AddOptions<AdminOptions>()
+    .Configure<IConfiguration>((options, configuration) =>
+        options.Password = configuration["AdminPassword"] ?? string.Empty)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+
+builder.Services.AddSingleton<IAccountRepository, PostgresAccountRepository>();
+builder.Services.AddSingleton<ISessionRepository, PostgresSessionRepository>();
+builder.Services.AddSingleton<IOperationRepository, PostgresOperationRepository>();
 builder.Services.AddSingleton<AccountService>();
-builder.Services.AddSingleton(_ =>
+builder.Services.AddSingleton(serviceProvider =>
     new SessionService(
-        _.GetRequiredService<ISessionRepository>(),
-        _.GetRequiredService<IAccountRepository>(),
-        builder.Configuration["AdminPassword"] ?? "admin123"));
+        serviceProvider.GetRequiredService<ISessionRepository>(),
+        serviceProvider.GetRequiredService<IAccountRepository>(),
+        serviceProvider.GetRequiredService<IOptions<AdminOptions>>().Value.Password));
 
 builder.Services.AddFluentMigratorCore() // настройка миграции(куда подключаться)
     .ConfigureRunner(rb => rb
         .AddPostgres() // что за бд
-        .WithGlobalConnectionString(builder.Configuration.GetConnectionString("Postgres")) // куда подкл.
+        .WithGlobalConnectionString(serviceProvider =>
+            serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value.ConnectionString) // куда подкл.
         .ScanIn(typeof(Migration001InitialSchema).Assembly).For.Migrations()); // тут ищем все классы миграции
 
 var app = builder.Build();

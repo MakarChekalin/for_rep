@@ -1,4 +1,5 @@
 using Atm.Domain;
+using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace Atm.Infrastructure;
@@ -7,10 +8,10 @@ public class PostgresAccountRepository : IAccountRepository
 {
     private readonly string _connectionString;
 
-    public PostgresAccountRepository(string connectionString)
-{
-        _connectionString = connectionString;
-}
+    public PostgresAccountRepository(IOptions<DatabaseOptions> options)
+    {
+        _connectionString = options.Value.ConnectionString;
+    }
 
     public async Task<Account?> GetByNumberAsync(string number)
     {

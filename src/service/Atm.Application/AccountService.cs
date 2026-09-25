@@ -92,14 +92,14 @@ public class AccountService
         return (true, account.Balance);
     }
 
-    public async Task<(bool Success, IReadOnlyList<Operation>? History)> GetHistoryAsync(Guid sessionKey)
+    public async Task<(bool Success, IAsyncEnumerable<Operation>? History)> GetHistoryAsync(Guid sessionKey)
     {
         var session = await _sessionRepository.GetByKeyAsync(sessionKey);
 
         if (session == null || session.Type != SessionType.User || session.AccountNumber == null)
             return (false, null);
 
-        var history = await _operationRepository.GetByAccountNumberAsync(session.AccountNumber);
+        var history = _operationRepository.GetByAccountNumberAsync(session.AccountNumber);
 
         return (true, history);
     }
