@@ -1,4 +1,5 @@
 using Atm.Client.Application;
+using Atm.Client.Domain;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -16,12 +17,20 @@ public class DepositCommand : AsyncCommand<AmountSettings>
 
     protected override async Task<int> ExecuteAsync(CommandContext context, AmountSettings settings, CancellationToken cancellationToken)
     {
-        var (success, error) = await _service.DepositAsync(settings.Amount);
+        DepositResult result = await _service.DepositAsync(settings.Amount);
 
-        if (success)
-            AnsiConsole.MarkupLine("[green]Deposit successful.[/]");
-        else
-            AnsiConsole.MarkupLine($"[red]Failed: {error}[/]");
+        switch (result)
+        {
+            case DepositResult.Success:
+                AnsiConsole.MarkupLine("[green]Deposit successful.[/]");
+                break;
+            case DepositResult.NotLoggedIn:
+                AnsiConsole.MarkupLine("[red]Not logged in.[/]");
+                break;
+            default:
+                AnsiConsole.MarkupLine("[red]Deposit failed.[/]");
+                break;
+        }
 
         return 0;
     }

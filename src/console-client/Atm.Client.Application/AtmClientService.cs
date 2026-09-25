@@ -13,26 +13,26 @@ public class AtmClientService : IAtmClientService
         _sessionState = sessionState;
     }
 
-    public async Task<bool> LoginUserAsync(string accountNumber, string pinCode)
+    public async Task<LoginResult> LoginUserAsync(string accountNumber, string pinCode)
     {
-        var (success, sessionKey) = await _gateway.LoginUserAsync(accountNumber, pinCode);
+        Guid? sessionKey = await _gateway.LoginUserAsync(accountNumber, pinCode);
 
-        if (!success || sessionKey == null)
-            return false;
+        if (sessionKey == null)
+            return LoginResult.Error;
 
         _sessionState.SessionKey = sessionKey;
-        return true;
+        return LoginResult.Success;
     }
 
-    public async Task<bool> LoginAdminAsync(string password)
+    public async Task<LoginResult> LoginAdminAsync(string password)
     {
-        var (success, sessionKey) = await _gateway.LoginAdminAsync(password);
+        Guid? sessionKey = await _gateway.LoginAdminAsync(password);
 
-        if (!success || sessionKey == null)
-            return false;
+        if (sessionKey == null)
+            return LoginResult.Error;
 
         _sessionState.SessionKey = sessionKey;
-        return true;
+        return LoginResult.Success;
     }
 
     public async Task<CreateAccountResult> CreateAccountAsync(string number, string pinCode)
@@ -44,36 +44,36 @@ public class AtmClientService : IAtmClientService
         return success ? CreateAccountResult.Success : CreateAccountResult.Error;
     }
 
-    public async Task<(bool Success, string? Error)> WithdrawAsync(decimal amount)
+    public async Task<WithdrawResult> WithdrawAsync(decimal amount)
     {
         if (_sessionState.SessionKey == null)
-            return (false, "Not logged in");
+            return WithdrawResult.NotLoggedIn;
 
-        var success = await _gateway.WithdrawAsync(_sessionState.SessionKey.Value, amount);
-        return (success, success ? null : "Withdrawal failed");
+        bool success = await _gateway.WithdrawAsync(_sessionState.SessionKey.Value, amount);
+        return success ? WithdrawResult.Success : WithdrawResult.Error;
     }
 
-    public async Task<(bool Success, string? Error)> DepositAsync(decimal amount)
+    public async Task<DepositResult> DepositAsync(decimal amount)
     {
         if (_sessionState.SessionKey == null)
-            return (false, "Not logged in");
+            return DepositResult.NotLoggedIn;
 
-        var success = await _gateway.DepositAsync(_sessionState.SessionKey.Value, amount);
-        return (success, success ? null : "Deposit failed");
+        bool success = await _gateway.DepositAsync(_sessionState.SessionKey.Value, amount);
+        return success ? DepositResult.Success : DepositResult.Error;
     }
 
-    public async Task<(bool Success, decimal? Balance)> GetBalanceAsync()
+    public async Task<decimal?> GetBalanceAsync()
     {
         if (_sessionState.SessionKey == null)
-            return (false, null);
+            return null;
 
         return await _gateway.GetBalanceAsync(_sessionState.SessionKey.Value);
     }
 
-    public async Task<(bool Success, List<OperationResponse>? History)> GetHistoryAsync()
+    public async Task<List<OperationResponse>?> GetHistoryAsync()
     {
         if (_sessionState.SessionKey == null)
-            return (false, null);
+            return null;
 
         return await _gateway.GetHistoryAsync(_sessionState.SessionKey.Value);
     }

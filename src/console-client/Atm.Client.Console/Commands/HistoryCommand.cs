@@ -1,4 +1,5 @@
 using Atm.Client.Application;
+using Atm.Client.Domain;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -15,9 +16,9 @@ public class HistoryCommand : AsyncCommand
 
     protected override async Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken)
     {
-        var (success, history) = await _service.GetHistoryAsync();
+        List<OperationResponse>? history = await _service.GetHistoryAsync();
 
-        if (!success || history == null)
+        if (history == null)
         {
             AnsiConsole.MarkupLine("[red]Failed to get history.[/]");
             return 0;

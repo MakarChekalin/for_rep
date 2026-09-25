@@ -28,10 +28,11 @@ public class PostgresSessionRepository : ISessionRepository
         if (!await reader.ReadAsync())
             return null;
 
-        var type = Enum.Parse<SessionType>(reader.GetString(1));
-        var accountNumber = reader.IsDBNull(2) ? null : reader.GetString(2);
+        var type = Enum.Parse<SessionType>(reader.GetString(reader.GetOrdinal("type")));
+        int accountNumberOrdinal = reader.GetOrdinal("account_number");
+        string? accountNumber = reader.IsDBNull(accountNumberOrdinal) ? null : reader.GetString(accountNumberOrdinal);
 
-        return new Session(type, accountNumber, reader.GetGuid(0));
+        return new Session(type, accountNumber, reader.GetGuid(reader.GetOrdinal("key")));
     }
 
     public async Task SaveAsync(Session session)

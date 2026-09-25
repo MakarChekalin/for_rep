@@ -29,9 +29,9 @@ public class PostgresAccountRepository : IAccountRepository
             return null;
 
         return new Account(
-            reader.GetString(0),
-            reader.GetString(1),
-            reader.GetDecimal(2));
+            reader.GetString(reader.GetOrdinal("number")),
+            reader.GetString(reader.GetOrdinal("pin_code")),
+            reader.GetDecimal(reader.GetOrdinal("balance")));
     }
 
     public async Task SaveAsync(Account account)

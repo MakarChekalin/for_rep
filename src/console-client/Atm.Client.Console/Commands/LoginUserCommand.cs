@@ -1,4 +1,5 @@
 using Atm.Client.Application;
+using Atm.Client.Domain;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -15,9 +16,9 @@ public class LoginUserCommand : AsyncCommand<LoginUserSettings> // что сде
 
     protected override async Task<int> ExecuteAsync(CommandContext context, LoginUserSettings settings, CancellationToken cancellationToken) // CancellationToken для отмены(ctrl + c)
     {
-        var success = await _service.LoginUserAsync(settings.AccountNumber, settings.PinCode);
+        LoginResult result = await _service.LoginUserAsync(settings.AccountNumber, settings.PinCode);
 
-        if (success)
+        if (result == LoginResult.Success)
             AnsiConsole.MarkupLine("[green]Logged in successfully.[/]");
         else
             AnsiConsole.MarkupLine("[red]Login failed.[/]");

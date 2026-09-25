@@ -6,18 +6,18 @@ namespace Atm.Client.Console.Commands;
 
 public class BalanceCommand : AsyncCommand
 {
-    private readonly AtmClientService _service;
+    private readonly IAtmClientService _service;
 
-    public BalanceCommand(AtmClientService service)
+    public BalanceCommand(IAtmClientService service)
     {
         _service = service;
     }
 
     protected override async Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken)
     {
-        var (success, balance) = await _service.GetBalanceAsync();
+        decimal? balance = await _service.GetBalanceAsync();
 
-        if (success)
+        if (balance != null)
             AnsiConsole.MarkupLine($"[green]Balance: {balance}[/]");
         else
             AnsiConsole.MarkupLine("[red]Failed to get balance.[/]");

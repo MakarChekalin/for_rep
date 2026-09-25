@@ -1,4 +1,5 @@
 using Atm.Client.Domain;
+using Refit;
 
 namespace Atm.Client.Infrastructure;
 
@@ -11,24 +12,24 @@ public class RefitAtmGateway : IAtmGateway
         _api = api;
     }
 
-    public async Task<(bool Success, Guid? SessionKey)> LoginUserAsync(string accountNumber, string pinCode)
+    public async Task<Guid?> LoginUserAsync(string accountNumber, string pinCode)
     {
-        var response = await _api.CreateUserSessionAsync(new LoginUserBody(accountNumber, pinCode));
+        IApiResponse<SessionKeyResponse> response = await _api.CreateUserSessionAsync(new LoginUserBody(accountNumber, pinCode));
 
         if (!response.IsSuccessStatusCode || response.Content == null)
-            return (false, null);
+            return null;
 
-        return (true, response.Content.SessionKey);
+        return response.Content.SessionKey;
     }
 
-    public async Task<(bool Success, Guid? SessionKey)> LoginAdminAsync(string password)
+    public async Task<Guid?> LoginAdminAsync(string password)
     {
-        var response = await _api.CreateAdminSessionAsync(new LoginAdminBody(password));
+        IApiResponse<SessionKeyResponse> response = await _api.CreateAdminSessionAsync(new LoginAdminBody(password));
 
         if (!response.IsSuccessStatusCode || response.Content == null)
-            return (false, null);
+            return null;
 
-        return (true, response.Content.SessionKey);
+        return response.Content.SessionKey;
     }
 
     public async Task<bool> CreateAccountAsync(Guid sessionKey, string number, string pinCode)
@@ -49,23 +50,23 @@ public class RefitAtmGateway : IAtmGateway
         return response.IsSuccessStatusCode;
     }
 
-    public async Task<(bool Success, decimal? Balance)> GetBalanceAsync(Guid sessionKey)
+    public async Task<decimal?> GetBalanceAsync(Guid sessionKey)
     {
-        var response = await _api.GetBalanceAsync(sessionKey);
+        IApiResponse<BalanceResponse> response = await _api.GetBalanceAsync(sessionKey);
 
         if (!response.IsSuccessStatusCode || response.Content == null)
-            return (false, null);
+            return null;
 
-        return (true, response.Content.Balance);
+        return response.Content.Balance;
     }
 
-    public async Task<(bool Success, List<OperationResponse>? History)> GetHistoryAsync(Guid sessionKey)
+    public async Task<List<OperationResponse>?> GetHistoryAsync(Guid sessionKey)
     {
-        var response = await _api.GetTransactionsAsync(sessionKey);
+        IApiResponse<List<OperationResponse>> response = await _api.GetTransactionsAsync(sessionKey);
 
         if (!response.IsSuccessStatusCode || response.Content == null)
-            return (false, null);
+            return null;
 
-        return (true, response.Content);
+        return response.Content;
     }
 }

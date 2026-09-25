@@ -1,4 +1,5 @@
 using Atm.Client.Application;
+using Atm.Client.Domain;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -15,9 +16,9 @@ public class LoginAdminCommand : AsyncCommand<LoginAdminSettings>
 
     protected override async Task<int> ExecuteAsync(CommandContext context, LoginAdminSettings settings, CancellationToken cancellationToken)
     {
-        var success = await _service.LoginAdminAsync(settings.Password);
+        LoginResult result = await _service.LoginAdminAsync(settings.Password);
 
-        if (success)
+        if (result == LoginResult.Success)
             AnsiConsole.MarkupLine("[green]Logged in as admin.[/]");
         else
             AnsiConsole.MarkupLine("[red]Login failed.[/]");

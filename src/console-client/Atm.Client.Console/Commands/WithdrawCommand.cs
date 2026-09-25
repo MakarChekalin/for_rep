@@ -1,4 +1,5 @@
 using Atm.Client.Application;
+using Atm.Client.Domain;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -15,12 +16,20 @@ public class WithdrawCommand : AsyncCommand<AmountSettings>
 
     protected override async Task<int> ExecuteAsync(CommandContext context, AmountSettings settings, CancellationToken cancellationToken)
     {
-        var (success, error) = await _service.WithdrawAsync(settings.Amount);
+        WithdrawResult result = await _service.WithdrawAsync(settings.Amount);
 
-        if (success)
-            AnsiConsole.MarkupLine("[green]Withdrawal successful.[/]");
-        else
-            AnsiConsole.MarkupLine($"[red]Failed: {error}[/]");
+        switch (result)
+        {
+            case WithdrawResult.Success:
+                AnsiConsole.MarkupLine("[green]Withdrawal successful.[/]");
+                break;
+            case WithdrawResult.NotLoggedIn:
+                AnsiConsole.MarkupLine("[red]Not logged in.[/]");
+                break;
+            default:
+                AnsiConsole.MarkupLine("[red]Withdrawal failed.[/]");
+                break;
+        }
 
         return 0;
     }

@@ -47,13 +47,13 @@ public class PostgresOperationRepository : IOperationRepository
 
         while (await reader.ReadAsync())
         {
-            var type = Enum.Parse<OperationType>(reader.GetString(1));
+            var type = Enum.Parse<OperationType>(reader.GetString(reader.GetOrdinal("type")));
 
             yield return new Operation(
-                reader.GetString(0),
+                reader.GetString(reader.GetOrdinal("account_number")),
                 type,
-                reader.GetDecimal(2),
-                reader.GetDateTime(3));
+                reader.GetDecimal(reader.GetOrdinal("amount")),
+                reader.GetDateTime(reader.GetOrdinal("timestamp")));
         }
     }
 }
