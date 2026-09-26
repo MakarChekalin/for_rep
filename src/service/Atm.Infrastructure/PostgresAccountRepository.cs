@@ -1,29 +1,27 @@
 using Atm.Domain;
-using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace Atm.Infrastructure;
 
 public class PostgresAccountRepository : IAccountRepository
 {
-    private readonly string _connectionString;
+    private readonly NpgsqlDataSource _dataSource;
 
-    public PostgresAccountRepository(IOptions<DatabaseOptions> options)
+    public PostgresAccountRepository(NpgsqlDataSource ds)
     {
-        _connectionString = options.Value.ConnectionString;
+        _dataSource = ds;
     }
 
     public async Task<Account?> GetByNumberAsync(string number)
     {
-        await using var connection = new NpgsqlConnection(_connectionString); // тут создается соединение (connection берется из настроек)
-        await connection.OpenAsync(); // открытие соединения
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync();
 
         await using var command = new NpgsqlCommand(
             "SELECT number, pin_code, balance FROM accounts WHERE number = @number",
             connection);
         command.Parameters.AddWithValue("number", number); // делаем так для защиты
 
-        await using var reader = await command.ExecuteReaderAsync();
+        await using NpgsqlDataReader reader = await command.ExecuteReaderAsync();
 
         if (!await reader.ReadAsync())
             return null;
@@ -36,8 +34,7 @@ public class PostgresAccountRepository : IAccountRepository
 
     public async Task SaveAsync(Account account)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync();
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync();
 
         // тут ON CONFLICT нужен чтобы при конфликте с PR баланс обновлялся
         await using var command = new NpgsqlCommand(
@@ -56,7 +53,7 @@ public class PostgresAccountRepository : IAccountRepository
 
     public async Task<bool> ExistsAsync(string number)
     {
-        var account = await GetByNumberAsync(number);
+        Account? account = await GetByNumberAsync(number);
         return account != null;
     }
 }

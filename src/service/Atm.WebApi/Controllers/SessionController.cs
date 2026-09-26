@@ -25,7 +25,7 @@ public class SessionController : ControllerBase
     [HttpPost("user-sessions")]
     public async Task<IActionResult> CreateUserSession([FromBody] LoginUserRequest request)
     {
-        var key = await _sessionService.LoginUserAsync(request.AccountNumber, request.PinCode);
+        Guid? key = await _sessionService.LoginUserAsync(request.AccountNumber, request.PinCode);
 
         if (key == null)
             return Unauthorized();
@@ -36,7 +36,7 @@ public class SessionController : ControllerBase
     [HttpPost("admin-sessions")]
     public async Task<IActionResult> CreateAdminSession([FromBody] LoginAdminRequest request)
     {
-        var key = await _sessionService.LoginAdminAsync(request.Password);
+        Guid? key = await _sessionService.LoginAdminAsync(request.Password);
 
         if (key == null)
             return Unauthorized();

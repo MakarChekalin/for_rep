@@ -40,7 +40,7 @@ public class AtmClientService : IAtmClientService
         if (_sessionState.SessionKey == null)
             return CreateAccountResult.NotLoggedIn;
 
-        var success = await _gateway.CreateAccountAsync(_sessionState.SessionKey.Value, number, pinCode);
+        bool success = await _gateway.CreateAccountAsync(_sessionState.SessionKey.Value, number, pinCode);
         return success ? CreateAccountResult.Success : CreateAccountResult.Error;
     }
 

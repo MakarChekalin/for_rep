@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Atm.Domain\Atm.Domain.csproj" />
+    <ProjectReference Include="..\Atm.Application\Atm.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -9,6 +10,10 @@
     <PackageReference Include="FluentMigrator.Runner" />
     <PackageReference Include="FluentMigrator.Runner.Postgres" />
     <PackageReference Include="Npgsql" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <PropertyGroup>

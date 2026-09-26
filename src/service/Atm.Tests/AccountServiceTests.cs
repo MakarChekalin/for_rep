@@ -24,7 +24,7 @@ public class AccountServiceTests
         var service = new AccountService(accountRepoMock.Object, sessionRepoMock.Object, operationRepoMock.Object);
 
         // Act
-        var (success, error) = await service.WithdrawAsync(session.Key, 300);
+        (bool success, string? error) = await service.WithdrawAsync(session.Key, 300);
 
         // Assert
         Assert.True(success);
@@ -50,7 +50,7 @@ public class AccountServiceTests
         var service = new AccountService(accountRepoMock.Object, sessionRepoMock.Object, operationRepoMock.Object);
 
         // Act
-        var (success, error) = await service.WithdrawAsync(session.Key, 300);
+        (bool success, string? error) = await service.WithdrawAsync(session.Key, 300);
 
         // Assert
         Assert.False(success);
@@ -77,7 +77,7 @@ public class AccountServiceTests
         var service = new AccountService(accountRepoMock.Object, sessionRepoMock.Object, operationRepoMock.Object);
 
         // Act
-        var (success, error) = await service.DepositAsync(session.Key, 250);
+        (bool success, string? error) = await service.DepositAsync(session.Key, 250);
 
         // Assert
         Assert.True(success);

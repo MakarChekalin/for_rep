@@ -15,12 +15,12 @@ services.AddSingleton<IAtmGateway, RefitAtmGateway>();
 services.AddSingleton<ClientSessionState>();
 services.AddSingleton<AtmClientService>();
 
-var provider = services.BuildServiceProvider(); // собираем контейнер сами
-var clientService = provider.GetRequiredService<AtmClientService>(); // один готовый сервис для всех команд
+ServiceProvider provider = services.BuildServiceProvider(); // собираем контейнер сами
+AtmClientService clientService = provider.GetRequiredService<AtmClientService>(); // один готовый сервис для всех команд
 
 var registrar = new Atm.Client.Console.TypeRegistrar(services); // мост между DI и Spectre.Console.сli
 
-var sessionState = provider.GetRequiredService<ClientSessionState>(); // один обьект на все команды
+ClientSessionState sessionState = provider.GetRequiredService<ClientSessionState>(); // один обьект на все команды
 registrar.RegisterInstance(typeof(ClientSessionState), sessionState); // явно говорим используй именно этот
 registrar.RegisterInstance(typeof(AtmClientService), clientService); // чтобы сессия не терялась между командами
 
@@ -52,12 +52,12 @@ AnsiConsole.MarkupLine("Commands: login-user, login-admin, create-account, withd
 
 while (true)
 {
-    var input = AnsiConsole.Ask<string>(">"); // читка(метод из Spectre.consol)
+    string input = AnsiConsole.Ask<string>(">"); // читка(метод из Spectre.consol)
 
     if (string.Equals(input.Trim(), "exit", StringComparison.OrdinalIgnoreCase))
         break;
 
-    var commandArgs = input.Split(' ', StringSplitOptions.RemoveEmptyEntries); // разбиение на слова (просто args уже занято )
+    string[] commandArgs = input.Split(' ', StringSplitOptions.RemoveEmptyEntries); // разбиение на слова (просто args уже занято )
 
     await app.RunAsync(commandArgs);
 }

@@ -29,9 +29,9 @@ public class HistoryCommand : AsyncCommand
         table.AddColumn("Amount");
         table.AddColumn("Timestamp");
 
-        foreach (var op in history)
+        foreach (OperationResponse op in history)
         {
-            var typeName = op.Type == 0 ? "Withdraw" : "Deposit";
+            string typeName = op.Type == 0 ? "Withdraw" : "Deposit";
             table.AddRow(typeName, op.Amount.ToString(), op.Timestamp.ToString());
         }
 

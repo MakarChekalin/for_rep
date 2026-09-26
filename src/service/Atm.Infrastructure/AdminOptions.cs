@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Atm.WebApi;
+namespace Atm.Infrastructure;
 
 public class AdminOptions
 {

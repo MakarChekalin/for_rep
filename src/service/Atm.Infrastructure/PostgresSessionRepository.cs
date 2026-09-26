@@ -1,34 +1,32 @@
 using Atm.Domain;
-using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace Atm.Infrastructure;
 
 public class PostgresSessionRepository : ISessionRepository
 {
-    private readonly string _connectionString;
+    private readonly NpgsqlDataSource _dataSource;
 
-    public PostgresSessionRepository(IOptions<DatabaseOptions> options)
+    public PostgresSessionRepository(NpgsqlDataSource dataSource)
     {
-        _connectionString = options.Value.ConnectionString;
+        _dataSource = dataSource;
     }
 
     public async Task<Session?> GetByKeyAsync(Guid key)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync();
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync();
 
         await using var command = new NpgsqlCommand(
             "SELECT key, type, account_number FROM sessions WHERE key = @key",
             connection);
         command.Parameters.AddWithValue("key", key);
 
-        await using var reader = await command.ExecuteReaderAsync();
+        await using NpgsqlDataReader reader = await command.ExecuteReaderAsync();
 
         if (!await reader.ReadAsync())
             return null;
 
-        var type = Enum.Parse<SessionType>(reader.GetString(reader.GetOrdinal("type")));
+        SessionType type = Enum.Parse<SessionType>(reader.GetString(reader.GetOrdinal("type")));
         int accountNumberOrdinal = reader.GetOrdinal("account_number");
         string? accountNumber = reader.IsDBNull(accountNumberOrdinal) ? null : reader.GetString(accountNumberOrdinal);
 
@@ -37,8 +35,7 @@ public class PostgresSessionRepository : ISessionRepository
 
     public async Task SaveAsync(Session session)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync();
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync();
 
         await using var command = new NpgsqlCommand(
             @"

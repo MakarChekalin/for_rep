@@ -34,19 +34,19 @@ public class RefitAtmGateway : IAtmGateway
 
     public async Task<bool> CreateAccountAsync(Guid sessionKey, string number, string pinCode)
     {
-        var response = await _api.CreateAccountAsync(new CreateAccountBody(sessionKey, number, pinCode));
+        IApiResponse response = await _api.CreateAccountAsync(new CreateAccountBody(sessionKey, number, pinCode));
         return response.IsSuccessStatusCode;
     }
 
     public async Task<bool> WithdrawAsync(Guid sessionKey, decimal amount)
     {
-        var response = await _api.WithdrawAsync(new AmountBody(sessionKey, amount));
+        IApiResponse response = await _api.WithdrawAsync(new AmountBody(sessionKey, amount));
         return response.IsSuccessStatusCode;
     }
 
     public async Task<bool> DepositAsync(Guid sessionKey, decimal amount)
     {
-        var response = await _api.DepositAsync(new AmountBody(sessionKey, amount));
+        IApiResponse response = await _api.DepositAsync(new AmountBody(sessionKey, amount));
         return response.IsSuccessStatusCode;
     }
 

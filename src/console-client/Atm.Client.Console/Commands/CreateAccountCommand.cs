@@ -15,7 +15,7 @@ public class CreateAccountCommand : AsyncCommand<CreateAccountSettings>
 
     protected override async Task<int> ExecuteAsync(CommandContext context, CreateAccountSettings settings, CancellationToken cancellationToken)
     {
-        var result = await _service.CreateAccountAsync(settings.Number, settings.PinCode);
+        Domain.CreateAccountResult result = await _service.CreateAccountAsync(settings.Number, settings.PinCode);
 
         if (result == Domain.CreateAccountResult.Success)
             AnsiConsole.MarkupLine("[green]Account created.[/]");

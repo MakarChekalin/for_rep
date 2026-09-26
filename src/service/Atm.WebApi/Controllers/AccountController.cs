@@ -1,4 +1,5 @@
 using Atm.Application;
+using Atm.Domain;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 
@@ -27,7 +28,7 @@ public class AccountController : ControllerBase
     [HttpPost("accounts")]
     public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request)
     {
-        var success = await _accountService.CreateAccountAsync(request.SessionKey, request.Number, request.PinCode);
+        bool success = await _accountService.CreateAccountAsync(request.SessionKey, request.Number, request.PinCode);
 
         if (!success)
             return BadRequest();
@@ -38,7 +39,7 @@ public class AccountController : ControllerBase
     [HttpPost("accounts/withdrawals")]
     public async Task<IActionResult> CreateWithdrawal([FromBody] AmountRequest request)
     {
-        var (success, error) = await _accountService.WithdrawAsync(request.SessionKey, request.Amount);
+        (bool success, string? error) = await _accountService.WithdrawAsync(request.SessionKey, request.Amount);
 
         if (!success)
         {
@@ -54,7 +55,7 @@ public class AccountController : ControllerBase
     [HttpPost("accounts/deposits")]
     public async Task<IActionResult> CreateDeposit([FromBody] AmountRequest request)
     {
-        var (success, error) = await _accountService.DepositAsync(request.SessionKey, request.Amount);
+        (bool success, string? error) = await _accountService.DepositAsync(request.SessionKey, request.Amount);
 
         if (!success)
         {
@@ -70,7 +71,7 @@ public class AccountController : ControllerBase
     [HttpGet("accounts/balance")] // сделал GET так как по REST
     public async Task<IActionResult> GetBalance([FromQuery] Guid sessionKey) // FromQuery - передаем сессионный ключ прям в url
     {
-        var (success, balance) = await _accountService.GetBalanceAsync(sessionKey);
+        (bool success, decimal? balance) = await _accountService.GetBalanceAsync(sessionKey);
 
         if (!success)
             return Unauthorized();
@@ -81,7 +82,7 @@ public class AccountController : ControllerBase
     [HttpGet("accounts/transactions")]
     public async Task<IActionResult> GetTransactions([FromQuery] Guid sessionKey)
     {
-        var (success, history) = await _accountService.GetHistoryAsync(sessionKey);
+        (bool success, IAsyncEnumerable<Operation>? history) = await _accountService.GetHistoryAsync(sessionKey);
 
         if (!success)
             return Unauthorized();

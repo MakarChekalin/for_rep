@@ -1,22 +1,20 @@
 using Atm.Domain;
-using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace Atm.Infrastructure;
 
 public class PostgresOperationRepository : IOperationRepository
 {
-    private readonly string _connectionString;
+    private readonly NpgsqlDataSource _dataSource;
 
-    public PostgresOperationRepository(IOptions<DatabaseOptions> options)
+    public PostgresOperationRepository(NpgsqlDataSource dataSource)
     {
-        _connectionString = options.Value.ConnectionString;
+        _dataSource = dataSource;
     }
 
     public async Task SaveAsync(Operation operation)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync();
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync();
 
         await using var command = new NpgsqlCommand(
             @"
@@ -35,19 +33,18 @@ public class PostgresOperationRepository : IOperationRepository
     // IAsyncEnumerable: операции отдаются по одной по мере чтения из БД, без накопления всего списка в памяти
     public async IAsyncEnumerable<Operation> GetByAccountNumberAsync(string accountNumber)
     {
-        await using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync();
+        await using NpgsqlConnection connection = await _dataSource.OpenConnectionAsync();
 
         await using var command = new NpgsqlCommand(
             "SELECT account_number, type, amount, timestamp FROM operations WHERE account_number = @accountNumber ORDER BY timestamp",
             connection); // сортировка по времени
         command.Parameters.AddWithValue("accountNumber", accountNumber);
 
-        await using var reader = await command.ExecuteReaderAsync();
+        await using NpgsqlDataReader reader = await command.ExecuteReaderAsync();
 
         while (await reader.ReadAsync())
         {
-            var type = Enum.Parse<OperationType>(reader.GetString(reader.GetOrdinal("type")));
+            OperationType type = Enum.Parse<OperationType>(reader.GetString(reader.GetOrdinal("type")));
 
             yield return new Operation(
                 reader.GetString(reader.GetOrdinal("account_number")),

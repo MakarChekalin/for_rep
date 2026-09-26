@@ -20,7 +20,7 @@ public class SessionService
 
     public async Task<Guid?> LoginUserAsync(string accountNumber, string pinCode)
     {
-        var account = await _accountRepository.GetByNumberAsync(accountNumber);
+        Account? account = await _accountRepository.GetByNumberAsync(accountNumber);
 
         if (account == null)
             return null;
