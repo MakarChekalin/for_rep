@@ -1,4 +1,6 @@
-namespace Atm.Client.Domain;
+using Atm.Client.Application.DTO;
+
+namespace Atm.Client.Application;
 
 public interface IAtmGateway
 {
@@ -14,5 +16,5 @@ public interface IAtmGateway
 
     Task<decimal?> GetBalanceAsync(Guid sessionKey);
 
-    Task<List<OperationResponse>?> GetHistoryAsync(Guid sessionKey);
+    Task<List<OperationDto>?> GetHistoryAsync(Guid sessionKey);
 }

@@ -1,6 +1,5 @@
 ﻿using Atm.Client.Application;
 using Atm.Client.Console.Commands;
-using Atm.Client.Domain;
 using Atm.Client.Infrastructure;
 using Microsoft.Extensions.DependencyInjection;
 using Refit;
@@ -13,10 +12,10 @@ services.AddRefitClient<IAtmApi>().ConfigureHttpClient(c => c.BaseAddress = new 
 
 services.AddSingleton<IAtmGateway, RefitAtmGateway>();
 services.AddSingleton<ClientSessionState>();
-services.AddSingleton<AtmClientService>();
+services.AddSingleton<IAtmClientService, AtmClientService>();
 
 ServiceProvider provider = services.BuildServiceProvider(); // собираем контейнер сами
-AtmClientService clientService = provider.GetRequiredService<AtmClientService>(); // один готовый сервис для всех команд
+IAtmClientService clientService = provider.GetRequiredService<IAtmClientService>(); // один готовый сервис для всех команд
 
 var registrar = new Atm.Client.Console.TypeRegistrar(services); // мост между DI и Spectre.Console.сli
 

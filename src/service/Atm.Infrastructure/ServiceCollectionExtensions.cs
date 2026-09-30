@@ -29,27 +29,17 @@ public static class ServiceCollectionExtensions
         services.AddSingleton(serviceProvider =>
             NpgsqlDataSource.Create(serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value.ConnectionString));
 
+        services.AddSingleton<IAccountRepository, PostgresAccountRepository>();
+        services.AddSingleton<ISessionRepository, PostgresSessionRepository>();
+        services.AddSingleton<IOperationRepository, PostgresOperationRepository>();
+        services.AddSingleton<IAdminPasswordValidator, AdminPasswordValidator>();
+
         services.AddFluentMigratorCore() // настройка миграции(куда подключаться)
             .ConfigureRunner(rb => rb
                 .AddPostgres() // что за бд
                 .WithGlobalConnectionString(serviceProvider =>
                     serviceProvider.GetRequiredService<IOptions<DatabaseOptions>>().Value.ConnectionString) // куда подкл.
                 .ScanIn(typeof(Migration001InitialSchema).Assembly).For.Migrations()); // тут ищем все классы миграции
-
-        return services;
-    }
-
-    public static IServiceCollection AddApplication(this IServiceCollection services)
-    {
-        services.AddSingleton<IAccountRepository, PostgresAccountRepository>();
-        services.AddSingleton<ISessionRepository, PostgresSessionRepository>();
-        services.AddSingleton<IOperationRepository, PostgresOperationRepository>();
-        services.AddSingleton<AccountService>();
-        services.AddSingleton(serviceProvider =>
-            new SessionService(
-                serviceProvider.GetRequiredService<ISessionRepository>(),
-                serviceProvider.GetRequiredService<IAccountRepository>(),
-                serviceProvider.GetRequiredService<IOptions<AdminOptions>>().Value.Password));
 
         return services;
     }

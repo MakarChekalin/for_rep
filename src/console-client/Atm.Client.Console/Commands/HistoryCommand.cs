@@ -1,5 +1,5 @@
 using Atm.Client.Application;
-using Atm.Client.Domain;
+using Atm.Client.Application.DTO;
 using Spectre.Console;
 using Spectre.Console.Cli;
 
@@ -16,7 +16,7 @@ public class HistoryCommand : AsyncCommand
 
     protected override async Task<int> ExecuteAsync(CommandContext context, CancellationToken cancellationToken)
     {
-        List<OperationResponse>? history = await _service.GetHistoryAsync();
+        List<OperationDto>? history = await _service.GetHistoryAsync();
 
         if (history == null)
         {
@@ -29,7 +29,7 @@ public class HistoryCommand : AsyncCommand
         table.AddColumn("Amount");
         table.AddColumn("Timestamp");
 
-        foreach (OperationResponse op in history)
+        foreach (OperationDto op in history)
         {
             string typeName = op.Type == 0 ? "Withdraw" : "Deposit";
             table.AddRow(typeName, op.Amount.ToString(), op.Timestamp.ToString());

@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Atm.Client.Domain\Atm.Client.Domain.csproj" />
+    <ProjectReference Include="..\Atm.Client.Application\Atm.Client.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>

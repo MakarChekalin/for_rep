@@ -1,3 +1,4 @@
+using Atm.Client.Application.DTO;
 using Atm.Client.Domain;
 
 namespace Atm.Client.Application;
@@ -16,5 +17,5 @@ public interface IAtmClientService
 
     Task<decimal?> GetBalanceAsync();
 
-    Task<List<OperationResponse>?> GetHistoryAsync();
+    Task<List<OperationDto>?> GetHistoryAsync();
 }

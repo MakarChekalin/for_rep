@@ -1,6 +1,6 @@
 using Atm.Application;
+using Atm.WebApi.DTO;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
 namespace Atm.WebApi.Controllers;
 
@@ -8,19 +8,12 @@ namespace Atm.WebApi.Controllers;
 [Route("api")]
 public class SessionController : ControllerBase
 {
-    private readonly SessionService _sessionService;
+    private readonly ISessionService _sessionService;
 
-    public SessionController(SessionService sessionService)
+    public SessionController(ISessionService sessionService)
     {
         _sessionService = sessionService;
     }
-
-    public record LoginUserRequest(
-        [Required] string AccountNumber,
-        [Required] string PinCode);
-
-    public record LoginAdminRequest(
-        [Required] string Password);
 
     [HttpPost("user-sessions")]
     public async Task<IActionResult> CreateUserSession([FromBody] LoginUserRequest request)

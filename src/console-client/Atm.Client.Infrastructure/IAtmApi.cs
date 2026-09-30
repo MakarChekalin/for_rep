@@ -1,4 +1,4 @@
-﻿using Atm.Client.Domain;
+using Atm.Client.Infrastructure.DTO;
 using Refit;
 
 namespace Atm.Client.Infrastructure;

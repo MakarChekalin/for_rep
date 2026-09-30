@@ -2,20 +2,20 @@ using Atm.Domain;
 
 namespace Atm.Application;
 
-public class SessionService
+public class SessionService : ISessionService
 {
     private readonly ISessionRepository _sessionRepository;
     private readonly IAccountRepository _accountRepository;
-    private readonly string _adminPassword;
+    private readonly IAdminPasswordValidator _adminPasswordValidator;
 
     public SessionService(
         ISessionRepository sessionRepository,
         IAccountRepository accountRepository,
-        string adminPassword)
+        IAdminPasswordValidator adminPasswordValidator)
     {
         _sessionRepository = sessionRepository;
         _accountRepository = accountRepository;
-        _adminPassword = adminPassword;
+        _adminPasswordValidator = adminPasswordValidator;
     }
 
     public async Task<Guid?> LoginUserAsync(string accountNumber, string pinCode)
@@ -36,7 +36,7 @@ public class SessionService
 
     public async Task<Guid?> LoginAdminAsync(string password)
     {
-        if (password != _adminPassword)
+        if (!_adminPasswordValidator.IsValid(password))
             return null;
 
         var session = new Session(SessionType.Admin);

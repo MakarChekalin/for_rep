@@ -1,7 +1,7 @@
 using Atm.Application;
-using Atm.Domain;
+using Atm.Application.Results;
+using Atm.WebApi.DTO;
 using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
 
 namespace Atm.WebApi.Controllers;
 
@@ -9,28 +9,19 @@ namespace Atm.WebApi.Controllers;
 [Route("api")]
 public class AccountController : ControllerBase
 {
-    private readonly AccountService _accountService;
+    private readonly IAccountService _accountService;
 
-    public AccountController(AccountService accountService)
+    public AccountController(IAccountService accountService)
     {
         _accountService = accountService;
     }
 
-    public record CreateAccountRequest(
-        [Required] Guid SessionKey,
-        [Required] string Number,
-        [Required] string PinCode);
-
-    public record AmountRequest(
-        [Required] Guid SessionKey,
-        [Range(0.01, double.MaxValue)] decimal Amount); // чтобы не снимали <0
-
     [HttpPost("accounts")]
     public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request)
     {
-        bool success = await _accountService.CreateAccountAsync(request.SessionKey, request.Number, request.PinCode);
+        CreateAccountResult result = await _accountService.CreateAccountAsync(request.SessionKey, request.Number, request.PinCode);
 
-        if (!success)
+        if (result != CreateAccountResult.Success)
             return BadRequest();
 
         return Created(string.Empty, null); // 201 - успешно создано что то
@@ -39,15 +30,13 @@ public class AccountController : ControllerBase
     [HttpPost("accounts/withdrawals")]
     public async Task<IActionResult> CreateWithdrawal([FromBody] AmountRequest request)
     {
-        (bool success, string? error) = await _accountService.WithdrawAsync(request.SessionKey, request.Amount);
+        WithdrawResult result = await _accountService.WithdrawAsync(request.SessionKey, request.Amount);
 
-        if (!success)
-        {
-            if (error == "Unauthorized")
-                return Unauthorized();
+        if (result == WithdrawResult.Unauthorized)
+            return Unauthorized();
 
-            return BadRequest(error);
-        }
+        if (result != WithdrawResult.Success)
+            return BadRequest(result.ToString());
 
         return Created(string.Empty, null);
     }
@@ -55,15 +44,13 @@ public class AccountController : ControllerBase
     [HttpPost("accounts/deposits")]
     public async Task<IActionResult> CreateDeposit([FromBody] AmountRequest request)
     {
-        (bool success, string? error) = await _accountService.DepositAsync(request.SessionKey, request.Amount);
+        DepositResult result = await _accountService.DepositAsync(request.SessionKey, request.Amount);
 
-        if (!success)
-        {
-            if (error == "Unauthorized")
-                return Unauthorized();
+        if (result == DepositResult.Unauthorized)
+            return Unauthorized();
 
-            return BadRequest(error);
-        }
+        if (result != DepositResult.Success)
+            return BadRequest(result.ToString());
 
         return Created(string.Empty, null);
     }
@@ -71,22 +58,22 @@ public class AccountController : ControllerBase
     [HttpGet("accounts/balance")] // сделал GET так как по REST
     public async Task<IActionResult> GetBalance([FromQuery] Guid sessionKey) // FromQuery - передаем сессионный ключ прям в url
     {
-        (bool success, decimal? balance) = await _accountService.GetBalanceAsync(sessionKey);
+        GetBalanceResult result = await _accountService.GetBalanceAsync(sessionKey);
 
-        if (!success)
+        if (result.Status != GetBalanceStatus.Success)
             return Unauthorized();
 
-        return Ok(new { Balance = balance });
+        return Ok(new { result.Balance });
     }
 
     [HttpGet("accounts/transactions")]
     public async Task<IActionResult> GetTransactions([FromQuery] Guid sessionKey)
     {
-        (bool success, IAsyncEnumerable<Operation>? history) = await _accountService.GetHistoryAsync(sessionKey);
+        GetHistoryResult result = await _accountService.GetHistoryAsync(sessionKey);
 
-        if (!success)
+        if (result.Status != GetHistoryStatus.Success)
             return Unauthorized();
 
-        return Ok(history);
+        return Ok(result.History);
     }
 }

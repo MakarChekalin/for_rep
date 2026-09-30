@@ -1,4 +1,4 @@
-namespace Atm.Client.Domain;
+namespace Atm.Client.Infrastructure.DTO;
 
 public class BalanceResponse
 {

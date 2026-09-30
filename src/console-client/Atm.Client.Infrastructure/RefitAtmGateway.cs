@@ -1,4 +1,6 @@
-using Atm.Client.Domain;
+using Atm.Client.Application;
+using Atm.Client.Application.DTO;
+using Atm.Client.Infrastructure.DTO;
 using Refit;
 
 namespace Atm.Client.Infrastructure;
@@ -60,13 +62,21 @@ public class RefitAtmGateway : IAtmGateway
         return response.Content.Balance;
     }
 
-    public async Task<List<OperationResponse>?> GetHistoryAsync(Guid sessionKey)
+    public async Task<List<OperationDto>?> GetHistoryAsync(Guid sessionKey)
     {
         IApiResponse<List<OperationResponse>> response = await _api.GetTransactionsAsync(sessionKey);
 
         if (!response.IsSuccessStatusCode || response.Content == null)
             return null;
 
-        return response.Content;
+        return response.Content
+            .Select(operation => new OperationDto
+            {
+                AccountNumber = operation.AccountNumber,
+                Type = operation.Type,
+                Amount = operation.Amount,
+                Timestamp = operation.Timestamp,
+            })
+            .ToList();
     }
 }

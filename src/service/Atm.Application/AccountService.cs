@@ -1,8 +1,9 @@
+using Atm.Application.Results;
 using Atm.Domain;
 
 namespace Atm.Application;
 
-public class AccountService
+public class AccountService : IAccountService
 {
     private readonly IAccountRepository _accountRepository;
     private readonly ISessionRepository _sessionRepository;
@@ -18,89 +19,89 @@ public class AccountService
         _operationRepository = operationRepository;
     }
 
-    public async Task<bool> CreateAccountAsync(Guid sessionKey, string number, string pinCode)
+    public async Task<CreateAccountResult> CreateAccountAsync(Guid sessionKey, string number, string pinCode)
     {
         Session? session = await _sessionRepository.GetByKeyAsync(sessionKey);
 
         if (session == null || session.Type != SessionType.Admin)
-            return false;
+            return CreateAccountResult.Unauthorized;
 
         if (await _accountRepository.ExistsAsync(number))
-            return false;
+            return CreateAccountResult.Exists;
 
         var account = new Account(number, pinCode, balance: 0);
         await _accountRepository.SaveAsync(account);
 
-        return true;
+        return CreateAccountResult.Success;
     }
 
-    public async Task<(bool Success, string? Error)> WithdrawAsync(Guid sessionKey, decimal amount)
+    public async Task<WithdrawResult> WithdrawAsync(Guid sessionKey, decimal amount)
     {
         Session? session = await _sessionRepository.GetByKeyAsync(sessionKey);
 
         if (session == null || session.Type != SessionType.User || session.AccountNumber == null)
-            return (false, "Unauthorized");
+            return WithdrawResult.Unauthorized;
 
         Account? account = await _accountRepository.GetByNumberAsync(session.AccountNumber);
 
         if (account == null)
-            return (false, "Unauthorized");
+            return WithdrawResult.Unauthorized;
 
         bool success = account.Withdraw(amount);
 
         if (!success)
-            return (false, "Insufficient funds");
+            return WithdrawResult.InsufficientFunds;
 
         await _accountRepository.SaveAsync(account);
         await _operationRepository.SaveAsync(new Operation(account.Number, OperationType.Withdraw, amount));
 
-        return (true, null);
+        return WithdrawResult.Success;
     }
 
-    public async Task<(bool Success, string? Error)> DepositAsync(Guid sessionKey, decimal amount)
+    public async Task<DepositResult> DepositAsync(Guid sessionKey, decimal amount)
     {
         Session? session = await _sessionRepository.GetByKeyAsync(sessionKey);
 
         if (session == null || session.Type != SessionType.User || session.AccountNumber == null)
-            return (false, "Unauthorized");
+            return DepositResult.Unauthorized;
 
         Account? account = await _accountRepository.GetByNumberAsync(session.AccountNumber);
 
         if (account == null)
-            return (false, "Unauthorized");
+            return DepositResult.Unauthorized;
 
         account.Deposit(amount);
 
         await _accountRepository.SaveAsync(account);
         await _operationRepository.SaveAsync(new Operation(account.Number, OperationType.Deposit, amount));
 
-        return (true, null);
+        return DepositResult.Success;
     }
 
-    public async Task<(bool Success, decimal? Balance)> GetBalanceAsync(Guid sessionKey)
+    public async Task<GetBalanceResult> GetBalanceAsync(Guid sessionKey)
     {
         Session? session = await _sessionRepository.GetByKeyAsync(sessionKey);
 
         if (session == null || session.Type != SessionType.User || session.AccountNumber == null)
-            return (false, null);
+            return new GetBalanceResult(GetBalanceStatus.Unauthorized, 0);
 
         Account? account = await _accountRepository.GetByNumberAsync(session.AccountNumber);
 
         if (account == null)
-            return (false, null);
+            return new GetBalanceResult(GetBalanceStatus.Unauthorized, 0);
 
-        return (true, account.Balance);
+        return new GetBalanceResult(GetBalanceStatus.Success, account.Balance);
     }
 
-    public async Task<(bool Success, IAsyncEnumerable<Operation>? History)> GetHistoryAsync(Guid sessionKey)
+    public async Task<GetHistoryResult> GetHistoryAsync(Guid sessionKey)
     {
         Session? session = await _sessionRepository.GetByKeyAsync(sessionKey);
 
         if (session == null || session.Type != SessionType.User || session.AccountNumber == null)
-            return (false, null);
+            return new GetHistoryResult(GetHistoryStatus.Unauthorized, null);
 
         IAsyncEnumerable<Operation> history = _operationRepository.GetByAccountNumberAsync(session.AccountNumber);
 
-        return (true, history);
+        return new GetHistoryResult(GetHistoryStatus.Success, history);
     }
 }

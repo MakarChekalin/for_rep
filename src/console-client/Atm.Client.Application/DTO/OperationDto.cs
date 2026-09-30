@@ -1,6 +1,6 @@
-namespace Atm.Client.Domain;
+namespace Atm.Client.Application.DTO;
 
-public class OperationResponse
+public class OperationDto
 {
     public string AccountNumber { get; set; } = string.Empty;
 

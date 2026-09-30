@@ -1,5 +1,5 @@
+using Atm.Application;
 using Atm.Infrastructure;
-using FluentMigrator.Runner;
 using Scalar.AspNetCore;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
@@ -12,12 +12,7 @@ builder.Services.AddApplication();
 
 WebApplication app = builder.Build();
 
-using (IServiceScope scope = app.Services.CreateScope()) // применение миграций при страрте
-{
-    IMigrationRunner runner = scope.ServiceProvider.GetRequiredService<IMigrationRunner>();
-    runner.MigrateUp();
-}
-
+app.MigrateDatabase();
 app.MapOpenApi();
 app.MapScalarApiReference();
 app.MapControllers();

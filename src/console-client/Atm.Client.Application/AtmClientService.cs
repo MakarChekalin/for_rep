@@ -1,3 +1,4 @@
+using Atm.Client.Application.DTO;
 using Atm.Client.Domain;
 
 namespace Atm.Client.Application;
@@ -70,7 +71,7 @@ public class AtmClientService : IAtmClientService
         return await _gateway.GetBalanceAsync(_sessionState.SessionKey.Value);
     }
 
-    public async Task<List<OperationResponse>?> GetHistoryAsync()
+    public async Task<List<OperationDto>?> GetHistoryAsync()
     {
         if (_sessionState.SessionKey == null)
             return null;

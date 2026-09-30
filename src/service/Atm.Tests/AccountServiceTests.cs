@@ -1,4 +1,5 @@
 using Atm.Application;
+using Atm.Application.Results;
 using Atm.Domain;
 using Moq;
 
@@ -24,10 +25,10 @@ public class AccountServiceTests
         var service = new AccountService(accountRepoMock.Object, sessionRepoMock.Object, operationRepoMock.Object);
 
         // Act
-        (bool success, string? error) = await service.WithdrawAsync(session.Key, 300);
+        WithdrawResult result = await service.WithdrawAsync(session.Key, 300);
 
         // Assert
-        Assert.True(success);
+        Assert.Equal(WithdrawResult.Success, result);
         Assert.Equal(700, account.Balance);
         accountRepoMock.Verify(r => r.SaveAsync(account), Times.Once);
     }
@@ -50,11 +51,10 @@ public class AccountServiceTests
         var service = new AccountService(accountRepoMock.Object, sessionRepoMock.Object, operationRepoMock.Object);
 
         // Act
-        (bool success, string? error) = await service.WithdrawAsync(session.Key, 300);
+        WithdrawResult result = await service.WithdrawAsync(session.Key, 300);
 
         // Assert
-        Assert.False(success);
-        Assert.Equal("Insufficient funds", error);
+        Assert.Equal(WithdrawResult.InsufficientFunds, result);
         Assert.Equal(100, account.Balance);
         accountRepoMock.Verify(r => r.SaveAsync(It.IsAny<Account>()), Times.Never);
     }
@@ -77,10 +77,10 @@ public class AccountServiceTests
         var service = new AccountService(accountRepoMock.Object, sessionRepoMock.Object, operationRepoMock.Object);
 
         // Act
-        (bool success, string? error) = await service.DepositAsync(session.Key, 250);
+        DepositResult result = await service.DepositAsync(session.Key, 250);
 
         // Assert
-        Assert.True(success);
+        Assert.Equal(DepositResult.Success, result);
         Assert.Equal(750, account.Balance);
         accountRepoMock.Verify(r => r.SaveAsync(account), Times.Once);
     }
