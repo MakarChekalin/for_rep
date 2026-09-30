@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "Infrastructure"
+  ],
+  "properties": {
+    "Infrastructure": {
+      "allOf": [
+        {
+          "required": [
+            "Persistence"
+          ],
+          "properties": {
+            "Persistence": {
+              "allOf": [
+                {
+                  "required": [
+                    "Postgres"
+                  ],
+                  "properties": {
+                    "Postgres": {
+                      "allOf": [
+                        {
+                          "$ref": "#/definitions/Itmo_Dev_Platform_Persistence_Postgres_Models_PostgresConnectionOptions"
+                        }
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  },
+  "definitions": {
+    "Itmo_Dev_Platform_Persistence_Postgres_Models_PostgresConnectionOptions": {
+      "type": "object",
+      "required": [
+        "Host",
+        "Port",
+        "Database",
+        "Username",
+        "Password"
+      ],
+      "properties": {
+        "Host": {
+          "type": "string",
+          "minLength": 1
+        },
+        "Port": {
+          "type": "integer",
+          "format": "int32",
+          "maximum": 2147483647.0,
+          "minimum": 1.0
+        },
+        "Database": {
+          "type": "string",
+          "minLength": 1
+        },
+        "Username": {
+          "type": "string",
+          "minLength": 1
+        },
+        "Password": {
+          "type": "string",
+          "minLength": 1
+        },
+        "SslMode": {
+          "type": "string"
+        },
+        "Pooling": {
+          "type": "boolean",
+          "default": true
+        },
+        "MaximumPoolSize": {
+          "type": "integer",
+          "format": "int32",
+          "default": 10,
+          "maximum": 2147483647.0,
+          "minimum": 1.0
+        },
+        "EnableConnectionProviderLogging": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

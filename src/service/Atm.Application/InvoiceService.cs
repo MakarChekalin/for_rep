@@ -1,0 +1,126 @@
+using Atm.Application.Results;
+using Atm.Domain;
+
+namespace Atm.Application;
+
+public class InvoiceService : IInvoiceService
+{
+    private readonly IInvoiceRepository _invoiceRepository;
+    private readonly IAccountRepository _accountRepository;
+    private readonly ISessionRepository _sessionRepository;
+    private readonly IOperationRepository _operationRepository;
+
+    public InvoiceService(
+        IInvoiceRepository invoiceRepository,
+        IAccountRepository accountRepository,
+        ISessionRepository sessionRepository,
+        IOperationRepository operationRepository)
+    {
+        _invoiceRepository = invoiceRepository;
+        _accountRepository = accountRepository;
+        _sessionRepository = sessionRepository;
+        _operationRepository = operationRepository;
+    }
+
+    public async Task<CreateInvoiceResult> CreateInvoiceAsync(Guid sessionKey, string payerAccountNumber, decimal amount)
+    {
+        Session? session = await _sessionRepository.GetByKeyAsync(sessionKey);
+
+        if (session == null || session.Type != SessionType.User || session.AccountNumber == null)
+            return new CreateInvoiceResult(CreateInvoiceStatus.Unauthorized, null);
+
+        if (!await _accountRepository.ExistsAsync(payerAccountNumber))
+            return new CreateInvoiceResult(CreateInvoiceStatus.PayerNotFound, null);
+
+        var invoice = new Invoice(payerAccountNumber, session.AccountNumber, amount);
+        await _invoiceRepository.SaveAsync(invoice);
+
+        return new CreateInvoiceResult(CreateInvoiceStatus.Success, invoice.Id);
+    }
+
+    public async Task<PayInvoiceResult> PayInvoiceAsync(Guid sessionKey, Guid invoiceId)
+    {
+        Session? session = await _sessionRepository.GetByKeyAsync(sessionKey);
+
+        if (session == null || session.Type != SessionType.User || session.AccountNumber == null)
+            return PayInvoiceResult.Unauthorized;
+
+        Invoice? invoice = await _invoiceRepository.GetByIdAsync(invoiceId);
+
+        if (invoice == null)
+            return PayInvoiceResult.NotFound;
+
+        if (invoice.PayerAccountNumber != session.AccountNumber)
+            return PayInvoiceResult.Unauthorized;
+
+        Account? payer = await _accountRepository.GetByNumberAsync(invoice.PayerAccountNumber);
+        Account? payee = await _accountRepository.GetByNumberAsync(invoice.PayeeAccountNumber);
+
+        if (payer == null || payee == null)
+            return PayInvoiceResult.NotFound;
+
+        if (!invoice.Pay())
+            return PayInvoiceResult.AlreadyProcessed;
+
+        if (!payer.Withdraw(invoice.Amount))
+            return PayInvoiceResult.InsufficientFunds;
+
+        payee.Deposit(invoice.Amount);
+
+        await _accountRepository.SaveAsync(payer);
+        await _accountRepository.SaveAsync(payee);
+        await _invoiceRepository.SaveAsync(invoice);
+
+        await _operationRepository.SaveAsync(new Operation(payer.Number, OperationType.Withdraw, invoice.Amount, invoice.Id));
+        await _operationRepository.SaveAsync(new Operation(payee.Number, OperationType.Deposit, invoice.Amount, invoice.Id));
+
+        return PayInvoiceResult.Success;
+    }
+
+    public async Task<CancelInvoiceResult> CancelInvoiceAsync(Guid sessionKey, Guid invoiceId)
+    {
+        Session? session = await _sessionRepository.GetByKeyAsync(sessionKey);
+
+        if (session == null || session.Type != SessionType.User || session.AccountNumber == null)
+            return CancelInvoiceResult.Unauthorized;
+
+        Invoice? invoice = await _invoiceRepository.GetByIdAsync(invoiceId);
+
+        if (invoice == null)
+            return CancelInvoiceResult.NotFound;
+
+        if (invoice.PayeeAccountNumber != session.AccountNumber)
+            return CancelInvoiceResult.Unauthorized;
+
+        if (!invoice.Cancel())
+            return CancelInvoiceResult.AlreadyProcessed;
+
+        await _invoiceRepository.SaveAsync(invoice);
+
+        return CancelInvoiceResult.Success;
+    }
+
+    public async Task<GetOutgoingInvoicesResult> GetOutgoingInvoicesAsync(Guid sessionKey, string? payerAccountNumber, InvoiceStatus? status, Guid? cursor)
+    {
+        Session? session = await _sessionRepository.GetByKeyAsync(sessionKey);
+
+        if (session == null || session.Type != SessionType.User || session.AccountNumber == null)
+            return new GetOutgoingInvoicesResult(GetInvoicesStatus.Unauthorized, null);
+
+        IAsyncEnumerable<Invoice> invoices = _invoiceRepository.GetOutgoingAsync(session.AccountNumber, payerAccountNumber, status, cursor);
+
+        return new GetOutgoingInvoicesResult(GetInvoicesStatus.Success, invoices);
+    }
+
+    public async Task<GetIncomingInvoicesResult> GetIncomingInvoicesAsync(Guid sessionKey, string? payeeAccountNumber, InvoiceStatus? status, Guid? cursor)
+    {
+        Session? session = await _sessionRepository.GetByKeyAsync(sessionKey);
+
+        if (session == null || session.Type != SessionType.User || session.AccountNumber == null)
+            return new GetIncomingInvoicesResult(GetInvoicesStatus.Unauthorized, null);
+
+        IAsyncEnumerable<Invoice> invoices = _invoiceRepository.GetIncomingAsync(session.AccountNumber, payeeAccountNumber, status, cursor);
+
+        return new GetIncomingInvoicesResult(GetInvoicesStatus.Success, invoices);
+    }
+}
