@@ -12,5 +12,5 @@ public interface IAccountService
 
     Task<GetBalanceResult> GetBalanceAsync(Guid sessionKey);
 
-    Task<GetHistoryResult> GetHistoryAsync(Guid sessionKey);
+    Task<GetHistoryResult> GetHistoryAsync(Guid sessionKey, long? cursor, int pageSize);
 }

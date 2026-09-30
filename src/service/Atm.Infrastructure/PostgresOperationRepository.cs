@@ -38,18 +38,22 @@ public class PostgresOperationRepository : IOperationRepository
         await command.ExecuteNonQueryAsync(CancellationToken.None);
     }
 
-    public async IAsyncEnumerable<Operation> GetByAccountNumberAsync(string accountNumber)
+    public async IAsyncEnumerable<Operation> GetByAccountNumberAsync(string accountNumber, long? cursor, int pageSize)
     {
         await using IPersistenceConnection connection = await _connectionProvider.GetConnectionAsync(CancellationToken.None);
 
         await using IPersistenceCommand command = connection
             .CreateCommand("""
-                select account_number, type, amount, timestamp, payload
+                select id, account_number, type, amount, timestamp, payload
                 from operations
                 where account_number = @accountNumber
-                order by timestamp
+                  and (@cursor is null or id > @cursor)
+                order by id
+                limit @pageSize
                 """)
-            .AddParameter<string>("accountNumber", accountNumber);
+            .AddParameter<string>("accountNumber", accountNumber)
+            .AddParameter<long?>("cursor", cursor)
+            .AddParameter("pageSize", pageSize);
 
         await using DbDataReader reader = await command.ExecuteReaderAsync(CancellationToken.None);
 
@@ -63,7 +67,8 @@ public class PostgresOperationRepository : IOperationRepository
                 type,
                 reader.GetDecimal(reader.GetOrdinal("amount")),
                 payload.InvoiceId,
-                reader.GetDateTime(reader.GetOrdinal("timestamp")));
+                reader.GetDateTime(reader.GetOrdinal("timestamp")),
+                reader.GetInt64(reader.GetOrdinal("id")));
         }
     }
 

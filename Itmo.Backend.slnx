@@ -4,7 +4,7 @@
     <Project Path="src/service/Atm.Domain/Atm.Domain.csproj" />
     <Project Path="src/service/Atm.Application/Atm.Application.csproj" />
     <Project Path="src/service/Atm.Infrastructure/Atm.Infrastructure.csproj" />
-    <Project Path="src/service/Atm.WebApi/Atm.WebApi.csproj" />
+    <Project Path="src/service/Atm.Grpc/Atm.Grpc.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="src/service/Atm.Tests/Atm.Tests.csproj" />

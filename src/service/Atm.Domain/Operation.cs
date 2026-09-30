@@ -8,6 +8,8 @@ public enum OperationType // только списание или депозит
 
 public class Operation
 {
+    public long Id { get; }
+
     public string AccountNumber { get; }
 
     public OperationType Type { get; }
@@ -23,8 +25,10 @@ public class Operation
         OperationType type,
         decimal amount,
         Guid? invoiceId = null,
-        DateTime? timestamp = null)
+        DateTime? timestamp = null,
+        long id = 0)
     {
+        Id = id;
         AccountNumber = accountNumber;
         Type = type;
         Amount = amount;

@@ -54,14 +54,14 @@ public class PostgresInvoiceRepository : IInvoiceRepository
         await command.ExecuteNonQueryAsync(CancellationToken.None);
     }
 
-    public IAsyncEnumerable<Invoice> GetOutgoingAsync(string payeeAccountNumber, string? payerAccountNumber, InvoiceStatus? status, Guid? cursor)
+    public IAsyncEnumerable<Invoice> GetOutgoingAsync(string payeeAccountNumber, string? payerAccountNumber, InvoiceStatus? status, Guid? cursor, int pageSize)
     {
-        return StreamAsync("i.payee_account_number = @self", "i.payer_account_number = @counterparty", payeeAccountNumber, payerAccountNumber, status, cursor);
+        return StreamAsync("i.payee_account_number = @self", "i.payer_account_number = @counterparty", payeeAccountNumber, payerAccountNumber, status, cursor, pageSize);
     }
 
-    public IAsyncEnumerable<Invoice> GetIncomingAsync(string payerAccountNumber, string? payeeAccountNumber, InvoiceStatus? status, Guid? cursor)
+    public IAsyncEnumerable<Invoice> GetIncomingAsync(string payerAccountNumber, string? payeeAccountNumber, InvoiceStatus? status, Guid? cursor, int pageSize)
     {
-        return StreamAsync("i.payer_account_number = @self", "i.payee_account_number = @counterparty", payerAccountNumber, payeeAccountNumber, status, cursor);
+        return StreamAsync("i.payer_account_number = @self", "i.payee_account_number = @counterparty", payerAccountNumber, payeeAccountNumber, status, cursor, pageSize);
     }
 
     private static Invoice ReadInvoice(DbDataReader reader)
@@ -83,7 +83,8 @@ public class PostgresInvoiceRepository : IInvoiceRepository
         string self,
         string? counterparty,
         InvoiceStatus? status,
-        Guid? cursor)
+        Guid? cursor,
+        int pageSize)
     {
         await using IPersistenceConnection connection = await _connectionProvider.GetConnectionAsync(CancellationToken.None);
 
@@ -97,11 +98,13 @@ public class PostgresInvoiceRepository : IInvoiceRepository
                   and (@status is null or i.status = @status)
                   and (@cursor is null or (i.created_at, i.id) > (c.created_at, c.id))
                 order by i.created_at, i.id
+                limit @pageSize
                 """)
             .AddParameter<string>("self", self)
             .AddParameter<string?>("counterparty", counterparty)
             .AddParameter<string?>("status", status?.ToString())
-            .AddParameter<Guid?>("cursor", cursor);
+            .AddParameter<Guid?>("cursor", cursor)
+            .AddParameter("pageSize", pageSize);
 
         await using DbDataReader reader = await command.ExecuteReaderAsync(CancellationToken.None);
 

@@ -4,5 +4,5 @@ public interface IOperationRepository
 {
     Task SaveAsync(Operation operation);
 
-    IAsyncEnumerable<Operation> GetByAccountNumberAsync(string accountNumber);
+    IAsyncEnumerable<Operation> GetByAccountNumberAsync(string accountNumber, long? cursor, int pageSize);
 }

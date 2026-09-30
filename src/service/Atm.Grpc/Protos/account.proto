@@ -1,0 +1,73 @@
+syntax = "proto3";
+
+package atm;
+
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "Atm.Grpc";
+
+service AccountService {
+  rpc CreateAccount (CreateAccountRequest) returns (CreateAccountResponse);
+  rpc Withdraw (AmountRequest) returns (WithdrawResponse);
+  rpc Deposit (AmountRequest) returns (DepositResponse);
+  rpc GetBalance (SessionRequest) returns (GetBalanceResponse);
+  rpc GetHistory (GetHistoryRequest) returns (GetHistoryResponse);
+}
+
+message CreateAccountRequest {
+  string session_key = 1;
+  string number = 2;
+  string pin_code = 3;
+}
+
+message CreateAccountResponse {
+}
+
+message AmountRequest {
+  string session_key = 1;
+  string amount = 2;
+}
+
+message WithdrawResponse {
+}
+
+message DepositResponse {
+}
+
+message SessionRequest {
+  string session_key = 1;
+}
+
+message GetBalanceResponse {
+  string balance = 1;
+}
+
+message GetHistoryRequest {
+  string session_key = 1;
+  int32 page_size = 2;
+  string page_token = 3;
+}
+
+message GetHistoryResponse {
+  repeated OperationHistoryItem operations = 1;
+  string next_page_token = 2;
+}
+
+message OperationHistoryItem {
+  google.protobuf.Timestamp timestamp = 1;
+
+  oneof kind {
+    WithdrawOperation withdraw = 2;
+    DepositOperation deposit = 3;
+  }
+}
+
+message WithdrawOperation {
+  string amount = 1;
+  optional string invoice_id = 2;
+}
+
+message DepositOperation {
+  string amount = 1;
+  optional string invoice_id = 2;
+}

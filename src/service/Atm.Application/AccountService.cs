@@ -93,15 +93,26 @@ public class AccountService : IAccountService
         return new GetBalanceResult(GetBalanceStatus.Success, account.Balance);
     }
 
-    public async Task<GetHistoryResult> GetHistoryAsync(Guid sessionKey)
+    public async Task<GetHistoryResult> GetHistoryAsync(Guid sessionKey, long? cursor, int pageSize)
     {
         Session? session = await _sessionRepository.GetByKeyAsync(sessionKey);
 
         if (session == null || session.Type != SessionType.User || session.AccountNumber == null)
-            return new GetHistoryResult(GetHistoryStatus.Unauthorized, null);
+            return new GetHistoryResult(GetHistoryStatus.Unauthorized, null, null);
 
-        IAsyncEnumerable<Operation> history = _operationRepository.GetByAccountNumberAsync(session.AccountNumber);
+        var operations = new List<Operation>();
 
-        return new GetHistoryResult(GetHistoryStatus.Success, history);
+        await foreach (Operation operation in _operationRepository.GetByAccountNumberAsync(session.AccountNumber, cursor, pageSize + 1))
+            operations.Add(operation);
+
+        long? nextCursor = null;
+
+        if (operations.Count > pageSize)
+        {
+            nextCursor = operations[pageSize - 1].Id;
+            operations.RemoveRange(pageSize, operations.Count - pageSize);
+        }
+
+        return new GetHistoryResult(GetHistoryStatus.Success, operations, nextCursor);
     }
 }

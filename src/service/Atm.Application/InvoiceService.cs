@@ -100,27 +100,49 @@ public class InvoiceService : IInvoiceService
         return CancelInvoiceResult.Success;
     }
 
-    public async Task<GetOutgoingInvoicesResult> GetOutgoingInvoicesAsync(Guid sessionKey, string? payerAccountNumber, InvoiceStatus? status, Guid? cursor)
+    public async Task<GetOutgoingInvoicesResult> GetOutgoingInvoicesAsync(Guid sessionKey, string? payerAccountNumber, InvoiceStatus? status, Guid? cursor, int pageSize)
     {
         Session? session = await _sessionRepository.GetByKeyAsync(sessionKey);
 
         if (session == null || session.Type != SessionType.User || session.AccountNumber == null)
-            return new GetOutgoingInvoicesResult(GetInvoicesStatus.Unauthorized, null);
+            return new GetOutgoingInvoicesResult(GetInvoicesStatus.Unauthorized, null, null);
 
-        IAsyncEnumerable<Invoice> invoices = _invoiceRepository.GetOutgoingAsync(session.AccountNumber, payerAccountNumber, status, cursor);
+        var invoices = new List<Invoice>();
 
-        return new GetOutgoingInvoicesResult(GetInvoicesStatus.Success, invoices);
+        await foreach (Invoice invoice in _invoiceRepository.GetOutgoingAsync(session.AccountNumber, payerAccountNumber, status, cursor, pageSize + 1))
+            invoices.Add(invoice);
+
+        Guid? nextCursor = null;
+
+        if (invoices.Count > pageSize)
+        {
+            nextCursor = invoices[pageSize - 1].Id;
+            invoices.RemoveRange(pageSize, invoices.Count - pageSize);
+        }
+
+        return new GetOutgoingInvoicesResult(GetInvoicesStatus.Success, invoices, nextCursor);
     }
 
-    public async Task<GetIncomingInvoicesResult> GetIncomingInvoicesAsync(Guid sessionKey, string? payeeAccountNumber, InvoiceStatus? status, Guid? cursor)
+    public async Task<GetIncomingInvoicesResult> GetIncomingInvoicesAsync(Guid sessionKey, string? payeeAccountNumber, InvoiceStatus? status, Guid? cursor, int pageSize)
     {
         Session? session = await _sessionRepository.GetByKeyAsync(sessionKey);
 
         if (session == null || session.Type != SessionType.User || session.AccountNumber == null)
-            return new GetIncomingInvoicesResult(GetInvoicesStatus.Unauthorized, null);
+            return new GetIncomingInvoicesResult(GetInvoicesStatus.Unauthorized, null, null);
 
-        IAsyncEnumerable<Invoice> invoices = _invoiceRepository.GetIncomingAsync(session.AccountNumber, payeeAccountNumber, status, cursor);
+        var invoices = new List<Invoice>();
 
-        return new GetIncomingInvoicesResult(GetInvoicesStatus.Success, invoices);
+        await foreach (Invoice invoice in _invoiceRepository.GetIncomingAsync(session.AccountNumber, payeeAccountNumber, status, cursor, pageSize + 1))
+            invoices.Add(invoice);
+
+        Guid? nextCursor = null;
+
+        if (invoices.Count > pageSize)
+        {
+            nextCursor = invoices[pageSize - 1].Id;
+            invoices.RemoveRange(pageSize, invoices.Count - pageSize);
+        }
+
+        return new GetIncomingInvoicesResult(GetInvoicesStatus.Success, invoices, nextCursor);
     }
 }
