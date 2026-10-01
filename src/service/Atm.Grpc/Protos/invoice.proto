@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package atm;
+
+import "google/protobuf/timestamp.proto";
+
+option csharp_namespace = "Atm.Grpc";
+
+service InvoiceService {
+  rpc CreateInvoice (CreateInvoiceRequest) returns (CreateInvoiceResponse);
+  rpc PayInvoice (InvoiceRequest) returns (PayInvoiceResponse);
+  rpc CancelInvoice (InvoiceRequest) returns (CancelInvoiceResponse);
+  rpc GetOutgoingInvoices (GetOutgoingInvoicesRequest) returns (GetInvoicesResponse);
+  rpc GetIncomingInvoices (GetIncomingInvoicesRequest) returns (GetInvoicesResponse);
+}
+
+enum InvoiceStatus {
+  INVOICE_STATUS_UNSPECIFIED = 0;
+  INVOICE_STATUS_CREATED = 1;
+  INVOICE_STATUS_PAID = 2;
+  INVOICE_STATUS_CANCELLED = 3;
+}
+
+message CreateInvoiceRequest {
+  string session_key = 1;
+  string payer_account_number = 2;
+  string amount = 3;
+  string user_id = 4;
+}
+
+message CreateInvoiceResponse {
+  string invoice_id = 1;
+}
+
+message InvoiceRequest {
+  string session_key = 1;
+  string invoice_id = 2;
+  string user_id = 3;
+}
+
+message PayInvoiceResponse {
+}
+
+message CancelInvoiceResponse {
+}
+
+message GetOutgoingInvoicesRequest {
+  string session_key = 1;
+  optional string payer_account_number = 2;
+  optional InvoiceStatus status = 3;
+  int32 page_size = 4;
+  string page_token = 5;
+  string user_id = 6;
+}
+
+message GetIncomingInvoicesRequest {
+  string session_key = 1;
+  optional string payee_account_number = 2;
+  optional InvoiceStatus status = 3;
+  int32 page_size = 4;
+  string page_token = 5;
+  string user_id = 6;
+}
+
+message Invoice {
+  string id = 1;
+  string payer_account_number = 2;
+  string payee_account_number = 3;
+  string amount = 4;
+  InvoiceStatus status = 5;
+  google.protobuf.Timestamp created_at = 6;
+}
+
+message GetInvoicesResponse {
+  repeated Invoice invoices = 1;
+  string next_page_token = 2;
+}
