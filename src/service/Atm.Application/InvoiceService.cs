@@ -1,5 +1,7 @@
 using Atm.Application.Results;
 using Atm.Domain;
+using Itmo.Dev.Platform.Persistence.Abstractions.Transactions;
+using System.Data;
 
 namespace Atm.Application;
 
@@ -9,17 +11,20 @@ public class InvoiceService : IInvoiceService
     private readonly IAccountRepository _accountRepository;
     private readonly ISessionRepository _sessionRepository;
     private readonly IOperationRepository _operationRepository;
+    private readonly IPersistenceTransactionProvider _transactionProvider;
 
     public InvoiceService(
         IInvoiceRepository invoiceRepository,
         IAccountRepository accountRepository,
         ISessionRepository sessionRepository,
-        IOperationRepository operationRepository)
+        IOperationRepository operationRepository,
+        IPersistenceTransactionProvider transactionProvider)
     {
         _invoiceRepository = invoiceRepository;
         _accountRepository = accountRepository;
         _sessionRepository = sessionRepository;
         _operationRepository = operationRepository;
+        _transactionProvider = transactionProvider;
     }
 
     public async Task<CreateInvoiceResult> CreateInvoiceAsync(Guid sessionKey, string payerAccountNumber, decimal amount)
@@ -67,12 +72,16 @@ public class InvoiceService : IInvoiceService
 
         payee.Deposit(invoice.Amount);
 
+        await using IPersistenceTransaction transaction = await _transactionProvider.BeginTransactionAsync(IsolationLevel.ReadCommitted, CancellationToken.None);
+
         await _accountRepository.SaveAsync(payer);
         await _accountRepository.SaveAsync(payee);
         await _invoiceRepository.SaveAsync(invoice);
 
         await _operationRepository.SaveAsync(new Operation(payer.Number, OperationType.Withdraw, invoice.Amount, invoice.Id));
         await _operationRepository.SaveAsync(new Operation(payee.Number, OperationType.Deposit, invoice.Amount, invoice.Id));
+
+        await transaction.CommitAsync(CancellationToken.None);
 
         return PayInvoiceResult.Success;
     }

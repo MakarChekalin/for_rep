@@ -22,7 +22,7 @@ public class AccountServiceTests
 
         var operationRepoMock = new Mock<IOperationRepository>();
 
-        var service = new AccountService(accountRepoMock.Object, sessionRepoMock.Object, operationRepoMock.Object);
+        var service = new AccountService(accountRepoMock.Object, sessionRepoMock.Object, operationRepoMock.Object, TransactionProviderMock.Create());
 
         // Act
         WithdrawResult result = await service.WithdrawAsync(session.Key, 300);
@@ -48,7 +48,7 @@ public class AccountServiceTests
 
         var operationRepoMock = new Mock<IOperationRepository>();
 
-        var service = new AccountService(accountRepoMock.Object, sessionRepoMock.Object, operationRepoMock.Object);
+        var service = new AccountService(accountRepoMock.Object, sessionRepoMock.Object, operationRepoMock.Object, TransactionProviderMock.Create());
 
         // Act
         WithdrawResult result = await service.WithdrawAsync(session.Key, 300);
@@ -74,7 +74,7 @@ public class AccountServiceTests
 
         var operationRepoMock = new Mock<IOperationRepository>();
 
-        var service = new AccountService(accountRepoMock.Object, sessionRepoMock.Object, operationRepoMock.Object);
+        var service = new AccountService(accountRepoMock.Object, sessionRepoMock.Object, operationRepoMock.Object, TransactionProviderMock.Create());
 
         // Act
         DepositResult result = await service.DepositAsync(session.Key, 250);

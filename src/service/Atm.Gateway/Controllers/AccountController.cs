@@ -14,7 +14,14 @@ public class AccountController : ControllerBase
         _accountClient = accountClient;
     }
 
+    /// <summary>
+    /// Creates a new account for the given admin session.
+    /// </summary>
     [HttpPost("accounts")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateAccount([FromBody] CreateAccountRequest request)
     {
         await _accountClient.CreateAccountAsync(new Atm.Grpc.CreateAccountRequest
@@ -27,7 +34,14 @@ public class AccountController : ControllerBase
         return Created(string.Empty, null);
     }
 
+    /// <summary>
+    /// Withdraws money from the account tied to the given user session.
+    /// </summary>
     [HttpPost("accounts/withdrawals")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CreateWithdrawal([FromBody] AmountRequest request)
     {
         await _accountClient.WithdrawAsync(new Atm.Grpc.AmountRequest
@@ -39,7 +53,13 @@ public class AccountController : ControllerBase
         return Created(string.Empty, null);
     }
 
+    /// <summary>
+    /// Deposits money into the account tied to the given user session.
+    /// </summary>
     [HttpPost("accounts/deposits")]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> CreateDeposit([FromBody] AmountRequest request)
     {
         await _accountClient.DepositAsync(new Atm.Grpc.AmountRequest
@@ -51,7 +71,12 @@ public class AccountController : ControllerBase
         return Created(string.Empty, null);
     }
 
+    /// <summary>
+    /// Returns the current balance of the account tied to the given user session.
+    /// </summary>
     [HttpGet("accounts/balance")]
+    [ProducesResponseType(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetBalance([FromQuery] Guid sessionKey)
     {
         Atm.Grpc.GetBalanceResponse response = await _accountClient.GetBalanceAsync(new Atm.Grpc.SessionRequest
@@ -62,7 +87,13 @@ public class AccountController : ControllerBase
         return Ok(new { Balance = AmountFormat.FromGrpc(response.Balance) });
     }
 
+    /// <summary>
+    /// Returns a page of the operation history for the account tied to the given user session.
+    /// Each operation is either a withdrawal or a deposit, distinguished by the "type" field.
+    /// </summary>
     [HttpGet("accounts/transactions")]
+    [ProducesResponseType(typeof(GetHistoryResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetHistory([FromQuery] Guid sessionKey, [FromQuery] int pageSize = 20, [FromQuery] string pageToken = "")
     {
         Atm.Grpc.GetHistoryResponse response = await _accountClient.GetHistoryAsync(new Atm.Grpc.GetHistoryRequest
@@ -83,16 +114,14 @@ public class AccountController : ControllerBase
 
         return item.KindCase switch
         {
-            Atm.Grpc.OperationHistoryItem.KindOneofCase.Withdraw => new OperationDto(
-                "Withdraw",
+            Atm.Grpc.OperationHistoryItem.KindOneofCase.Withdraw => new WithdrawOperationDto(
                 AmountFormat.FromGrpc(item.Withdraw.Amount),
-                item.Withdraw.HasInvoiceId ? Guid.Parse(item.Withdraw.InvoiceId) : null,
-                timestamp),
-            Atm.Grpc.OperationHistoryItem.KindOneofCase.Deposit => new OperationDto(
-                "Deposit",
+                timestamp,
+                item.Withdraw.HasInvoiceId ? Guid.Parse(item.Withdraw.InvoiceId) : null),
+            Atm.Grpc.OperationHistoryItem.KindOneofCase.Deposit => new DepositOperationDto(
                 AmountFormat.FromGrpc(item.Deposit.Amount),
-                item.Deposit.HasInvoiceId ? Guid.Parse(item.Deposit.InvoiceId) : null,
-                timestamp),
+                timestamp,
+                item.Deposit.HasInvoiceId ? Guid.Parse(item.Deposit.InvoiceId) : null),
             Atm.Grpc.OperationHistoryItem.KindOneofCase.None => throw new InvalidOperationException("Operation kind not set"),
             _ => throw new InvalidOperationException("Unknown operation kind"),
         };

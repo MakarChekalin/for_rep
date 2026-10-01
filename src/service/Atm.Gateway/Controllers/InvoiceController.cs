@@ -14,7 +14,15 @@ public class InvoiceController : ControllerBase
         _invoiceClient = invoiceClient;
     }
 
+    /// <summary>
+    /// Creates an invoice requesting payment from the given payer account, issued by the account
+    /// tied to the given user session.
+    /// </summary>
     [HttpPost]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> CreateInvoice([FromBody] CreateInvoiceRequest request)
     {
         Atm.Grpc.CreateInvoiceResponse response = await _invoiceClient.CreateInvoiceAsync(new Atm.Grpc.CreateInvoiceRequest
@@ -27,7 +35,15 @@ public class InvoiceController : ControllerBase
         return Created(string.Empty, new { response.InvoiceId });
     }
 
+    /// <summary>
+    /// Pays an invoice. Only the payer account can pay it, and only while it is not already paid or cancelled.
+    /// </summary>
     [HttpPost("{invoiceId:guid}/pay")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> PayInvoice(Guid invoiceId, [FromBody] InvoiceActionRequest request)
     {
         await _invoiceClient.PayInvoiceAsync(new Atm.Grpc.InvoiceRequest
@@ -39,7 +55,15 @@ public class InvoiceController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Cancels an invoice. Only the issuing (payee) account can cancel it, and only while it is not already paid.
+    /// </summary>
     [HttpPost("{invoiceId:guid}/cancel")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
     public async Task<IActionResult> CancelInvoice(Guid invoiceId, [FromBody] InvoiceActionRequest request)
     {
         await _invoiceClient.CancelInvoiceAsync(new Atm.Grpc.InvoiceRequest
@@ -51,7 +75,14 @@ public class InvoiceController : ControllerBase
         return NoContent();
     }
 
+    /// <summary>
+    /// Returns a page of invoices issued by the account tied to the given user session, optionally
+    /// filtered by payer account number and status.
+    /// </summary>
     [HttpGet("outgoing")]
+    [ProducesResponseType(typeof(GetInvoicesResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetOutgoingInvoices(
         [FromQuery] Guid sessionKey,
         [FromQuery] string? payerAccountNumber,
@@ -59,6 +90,16 @@ public class InvoiceController : ControllerBase
         [FromQuery] int pageSize = 20,
         [FromQuery] string pageToken = "")
     {
+        Atm.Grpc.InvoiceStatus? parsedStatus = null;
+
+        if (status != null)
+        {
+            if (!Enum.TryParse(status, ignoreCase: true, out Atm.Grpc.InvoiceStatus parsed))
+                return BadRequest(new { error = $"Unknown invoice status '{status}'" });
+
+            parsedStatus = parsed;
+        }
+
         var request = new Atm.Grpc.GetOutgoingInvoicesRequest
         {
             SessionKey = sessionKey.ToString(),
@@ -69,15 +110,22 @@ public class InvoiceController : ControllerBase
         if (payerAccountNumber != null)
             request.PayerAccountNumber = payerAccountNumber;
 
-        if (status != null)
-            request.Status = ParseStatus(status);
+        if (parsedStatus != null)
+            request.Status = parsedStatus.Value;
 
         Atm.Grpc.GetInvoicesResponse response = await _invoiceClient.GetOutgoingInvoicesAsync(request);
 
         return Ok(ToResponse(response));
     }
 
+    /// <summary>
+    /// Returns a page of invoices to be paid by the account tied to the given user session, optionally
+    /// filtered by payee account number and status.
+    /// </summary>
     [HttpGet("incoming")]
+    [ProducesResponseType(typeof(GetInvoicesResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
     public async Task<IActionResult> GetIncomingInvoices(
         [FromQuery] Guid sessionKey,
         [FromQuery] string? payeeAccountNumber,
@@ -85,6 +133,16 @@ public class InvoiceController : ControllerBase
         [FromQuery] int pageSize = 20,
         [FromQuery] string pageToken = "")
     {
+        Atm.Grpc.InvoiceStatus? parsedStatus = null;
+
+        if (status != null)
+        {
+            if (!Enum.TryParse(status, ignoreCase: true, out Atm.Grpc.InvoiceStatus parsed))
+                return BadRequest(new { error = $"Unknown invoice status '{status}'" });
+
+            parsedStatus = parsed;
+        }
+
         var request = new Atm.Grpc.GetIncomingInvoicesRequest
         {
             SessionKey = sessionKey.ToString(),
@@ -95,20 +153,12 @@ public class InvoiceController : ControllerBase
         if (payeeAccountNumber != null)
             request.PayeeAccountNumber = payeeAccountNumber;
 
-        if (status != null)
-            request.Status = ParseStatus(status);
+        if (parsedStatus != null)
+            request.Status = parsedStatus.Value;
 
         Atm.Grpc.GetInvoicesResponse response = await _invoiceClient.GetIncomingInvoicesAsync(request);
 
         return Ok(ToResponse(response));
-    }
-
-    private static Atm.Grpc.InvoiceStatus ParseStatus(string status)
-    {
-        if (Enum.TryParse(status, ignoreCase: true, out Atm.Grpc.InvoiceStatus result))
-            return result;
-
-        throw new ArgumentException($"Unknown invoice status '{status}'", nameof(status));
     }
 
     private static GetInvoicesResponse ToResponse(Atm.Grpc.GetInvoicesResponse response)

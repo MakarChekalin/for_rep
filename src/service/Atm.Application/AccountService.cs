@@ -1,5 +1,7 @@
 using Atm.Application.Results;
 using Atm.Domain;
+using Itmo.Dev.Platform.Persistence.Abstractions.Transactions;
+using System.Data;
 
 namespace Atm.Application;
 
@@ -8,15 +10,18 @@ public class AccountService : IAccountService
     private readonly IAccountRepository _accountRepository;
     private readonly ISessionRepository _sessionRepository;
     private readonly IOperationRepository _operationRepository;
+    private readonly IPersistenceTransactionProvider _transactionProvider;
 
     public AccountService(
         IAccountRepository accountRepository,
         ISessionRepository sessionRepository,
-        IOperationRepository operationRepository)
+        IOperationRepository operationRepository,
+        IPersistenceTransactionProvider transactionProvider)
     {
         _accountRepository = accountRepository;
         _sessionRepository = sessionRepository;
         _operationRepository = operationRepository;
+        _transactionProvider = transactionProvider;
     }
 
     public async Task<CreateAccountResult> CreateAccountAsync(Guid sessionKey, string number, string pinCode)
@@ -52,8 +57,12 @@ public class AccountService : IAccountService
         if (!success)
             return WithdrawResult.InsufficientFunds;
 
+        await using IPersistenceTransaction transaction = await _transactionProvider.BeginTransactionAsync(IsolationLevel.ReadCommitted, CancellationToken.None);
+
         await _accountRepository.SaveAsync(account);
         await _operationRepository.SaveAsync(new Operation(account.Number, OperationType.Withdraw, amount));
+
+        await transaction.CommitAsync(CancellationToken.None);
 
         return WithdrawResult.Success;
     }
@@ -72,8 +81,12 @@ public class AccountService : IAccountService
 
         account.Deposit(amount);
 
+        await using IPersistenceTransaction transaction = await _transactionProvider.BeginTransactionAsync(IsolationLevel.ReadCommitted, CancellationToken.None);
+
         await _accountRepository.SaveAsync(account);
         await _operationRepository.SaveAsync(new Operation(account.Number, OperationType.Deposit, amount));
+
+        await transaction.CommitAsync(CancellationToken.None);
 
         return DepositResult.Success;
     }

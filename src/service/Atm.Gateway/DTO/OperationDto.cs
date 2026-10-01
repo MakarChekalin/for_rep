@@ -1,3 +1,8 @@
+using System.Text.Json.Serialization;
+
 namespace Atm.Gateway.DTO;
 
-public record OperationDto(string Type, decimal Amount, Guid? InvoiceId, DateTime Timestamp);
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "type")]
+[JsonDerivedType(typeof(WithdrawOperationDto), "withdraw")]
+[JsonDerivedType(typeof(DepositOperationDto), "deposit")]
+public abstract record OperationDto(decimal Amount, DateTime Timestamp);
