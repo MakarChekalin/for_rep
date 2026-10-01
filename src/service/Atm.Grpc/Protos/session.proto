@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package atm;
+
+option csharp_namespace = "Atm.Grpc";
+
+service SessionService {
+  rpc LoginUser (LoginUserRequest) returns (LoginResponse);
+  rpc LoginAdmin (LoginAdminRequest) returns (LoginResponse);
+}
+
+message LoginUserRequest {
+  string account_number = 1;
+  string pin_code = 2;
+  string user_id = 3;
+}
+
+message LoginAdminRequest {
+  string password = 1;
+  string user_id = 2;
+}
+
+message LoginResponse {
+  string session_key = 1;
+}
