@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package user_service;
+
+option csharp_namespace = "Users.Grpc.Contracts";
+
+service UserService {
+  rpc IsExists(GetUserByIdRequest) returns (GetUserByIdResponse);
+}
+
+message GetUserByIdRequest {
+  int64 user_id = 1;
+}
+
+message GetUserByIdResponse {
+  bool is_exists = 1;
+}
